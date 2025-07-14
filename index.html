@@ -1,0 +1,2904 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toolkit Konsultan BaZi & Feng Shui dengan AI</title>
+    <!-- Memakai Tailwind CSS untuk styling yang cepat dan rapi -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        input:disabled {
+            background-color: #e5e7eb;
+            cursor: not-allowed;
+        }
+        input.invalid-input {
+            border-color: #ef4444; /* red-500 */
+            box-shadow: 0 0 0 2px #f87171; /* red-400 with opacity */
+        }
+        .mobile-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        .mobile-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        .gender-radio:checked + label {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: white;
+            border-color: #2563eb; /* border-blue-700 */
+        }
+        .chart-bar {
+            transition: all 0.5s ease-in-out;
+        }
+        .progress-bar-inner {
+            transition: width 0.5s ease-in-out;
+        }
+        .pie-chart-slice {
+            transition: all 0.3s ease-in-out;
+        }
+        .pie-chart-slice:hover {
+            transform: scale(1.05);
+        }
+        .god-rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        .qi-flow-arrow {
+            transition: all 0.3s ease-in-out;
+        }
+        .aspect-bar-container {
+            height: 150px;
+        }
+        .aspect-bar {
+            transition: height 0.7s ease-out;
+            transform-origin: bottom;
+            min-height: 8px;
+        }
+        .aspect-bar:hover {
+            opacity: 0.8;
+        }
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .back-to-top:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+        
+        /* --- Chatbot Styles --- */
+        #chat-toggle-button {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            z-index: 1010;
+        }
+        #chatbot-container {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            width: 90%;
+            max-width: 400px;
+            height: 65vh;
+            max-height: 500px;
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #chatbot-container.show {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chat-message {
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #dbeafe; /* blue-100 */
+            align-self: flex-end;
+        }
+        .ai-message {
+            background-color: #f3f4f6; /* gray-100 */
+            align-self: flex-start;
+        }
+        .thinking-bubble {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 1rem;
+        }
+        .thinking-bubble span {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            background-color: #9ca3af; /* gray-400 */
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .thinking-bubble span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking-bubble span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-7xl mx-auto">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">Dasbor Konsultasi Metafisika</h1>
+                <p class="text-gray-500 mt-2">Analisis BaZi & Feng Shui Pribadi dengan Asisten AI</p>
+            </div>
+
+            <!-- [BARU] Panel Referensi Cepat -->
+            <div id="quick-reference-panel" class="mb-8 p-4 bg-gray-50 rounded-lg border">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">Panel Referensi Cepat</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Kartu Referensi 1 -->
+                    <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border">
+                        <div class="p-2 bg-red-100 rounded-full mr-4">
+                            <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-5.45-6.913l10.9 4.227-10.9-4.227zM3 10.567l18-4.227-18 4.227z" />
+                            </svg>
+                        </div>
+                        <div class="flex-grow">
+                            <h3 class="font-semibold text-gray-900">DestinyX Joey Yap</h3>
+                            <p class="text-xs text-gray-500">Platform analisis BaZi profesional.</p>
+                        </div>
+                        <div class="text-right">
+                             <a href="https://destinyx.joeyyap.com/Account/Login" target="_blank" rel="noopener noreferrer" class="bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold py-2 px-3 rounded-md transition-colors">Buka</a>
+                             <span class="block mt-1 text-xs text-red-500 font-semibold">Perlu Login</span>
+                        </div>
+                    </div>
+                    <!-- Kartu Referensi 2 -->
+                    <div class="flex items-center p-3 bg-white rounded-lg shadow-sm border">
+                        <div class="p-2 bg-blue-100 rounded-full mr-4">
+                           <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 14h.01M9 10h.01M12 10h.01M15 10h.01M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div class="flex-grow">
+                            <h3 class="font-semibold text-gray-900">BaZiCalculator.co</h3>
+                            <p class="text-xs text-gray-500">Kalkulator BaZi gratis dan cepat.</p>
+                        </div>
+                        <div class="text-right">
+                            <a href="https://bazicalculator.co/" target="_blank" rel="noopener noreferrer" class="bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold py-2 px-3 rounded-md transition-colors">Buka</a>
+                            <span class="block mt-1 text-xs text-green-500 font-semibold">Akses Gratis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Input BaZi (Sama seperti sebelumnya) -->
+            <div id="bazi-form" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+                <!-- Pilar Lahir -->
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <label class="block text-lg font-semibold mb-2 text-center text-gray-700">Pilar Tahun</label>
+                    <input type="number" id="birth-year" placeholder="Tahun Lahir" class="w-full p-2 border rounded mb-2 text-center" min="1900" max="2099">
+                    <input type="text" id="tahun-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="tahun-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <label class="block text-lg font-semibold mb-2 text-center text-gray-700">Pilar Bulan</label>
+                    <input type="text" id="bulan-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="bulan-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <label class="block text-lg font-semibold mb-2 text-center text-gray-700">Pilar Hari</label>
+                    <input type="text" id="hari-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="hari-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <label class="block text-lg font-semibold mb-2 text-center text-gray-700">Pilar Jam</label>
+                    <input type="text" id="jam-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="jam-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                    <div class="mt-3 text-center">
+                        <label class="flex items-center justify-center space-x-2 text-sm">
+                            <input type="checkbox" id="unknownHourCheckbox" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                            <span>Tidak Tahu Jam</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Pilar Periode -->
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <label class="block text-lg font-semibold mb-2 text-center text-blue-800">Dayun</label>
+                    <input type="text" id="dayun-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="dayun-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <label class="block text-lg font-semibold mb-2 text-center text-green-800">Liunian</label>
+                    <input type="text" id="liunian-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="liunian-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                </div>
+                <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <label class="block text-lg font-semibold mb-2 text-center text-purple-800">Bulan Ini</label>
+                    <input type="text" id="liuyue-langit" placeholder="Batang Langit" class="bazi-input w-full p-2 border rounded mb-2 text-center">
+                    <input type="text" id="liuyue-bumi" placeholder="Cabang Bumi" class="bazi-input w-full p-2 border rounded text-center">
+                </div>
+                <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <label class="block text-lg font-semibold mb-2 text-center text-red-800">Gender</label>
+                    <div class="flex flex-col space-y-2 mt-2">
+                        <input type="radio" name="gender" id="gender-male" value="male" class="hidden gender-radio">
+                        <label for="gender-male" class="w-full text-center p-2 border rounded-md cursor-pointer transition-colors">Laki-laki</label>
+                        <input type="radio" name="gender" id="gender-female" value="female" class="hidden gender-radio">
+                        <label for="gender-female" class="w-full text-center p-2 border rounded-md cursor-pointer transition-colors">Perempuan</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+                <button id="analyzeBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100">
+                    <span class="analyze-text">Analisis Lengkap</span>
+                    <span class="loading-text hidden">⏳ Menganalisis...</span>
+                </button>
+                <button id="resetBtn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105">
+                    🔄 Reset Data
+                </button>
+            </div>
+
+            <!-- Kontainer Hasil Analisis (Sama seperti sebelumnya) -->
+            <div id="life-aspects-dashboard" class="hidden p-4 sm:p-6 bg-gray-800 text-white rounded-lg border border-gray-700 mb-6">
+                <h2 class="text-xl sm:text-2xl font-bold mb-4 text-center">Dasbor Aspek Kehidupan</h2>
+                <div id="life-aspects-chart" class="flex flex-wrap sm:flex-nowrap justify-around items-end gap-2 sm:gap-4 overflow-x-auto pb-2"></div>
+                <div class="flex justify-center sm:justify-end text-xs mt-4 gap-4 flex-wrap">
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-yellow-400 mr-2"></span>Potensi Natal</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-yellow-600 mr-2"></span>Kondisi Periode Ini</div>
+                </div>
+            </div>
+            
+            <div id="strategy-solution-container" class="hidden p-6 bg-green-50 rounded-lg border border-green-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-green-800">Rencana Aksi & Strategi Transformasi</h2>
+                <div id="strategy-solution-content" class="space-y-4"></div>
+            </div>
+
+            <div id="summary-container" class="hidden grid md:grid-cols-2 gap-6 mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <div id="special-structure-container" class="space-y-3">
+                    <h2 class="text-xl font-semibold text-gray-800">Analisis Struktur Bagan & Kong Wang</h2>
+                    <div id="special-structure-content"></div>
+                    <div id="kong-wang-content" class="mt-4"></div>
+                </div>
+                <div id="personality-summary-container" class="space-y-3">
+                    <h2 class="text-xl font-semibold text-gray-800">Profil Kepribadian Berdasarkan 10 Dewa</h2>
+                    <div id="personality-summary-content" class="text-sm text-gray-700 italic p-4 bg-gray-100 rounded-md"></div>
+                </div>
+            </div>
+
+            <div id="advanced-analysis-container" class="hidden grid md:grid-cols-2 gap-6 mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <div id="health-analysis-container" class="space-y-3">
+                    <h2 class="text-xl font-semibold text-gray-800">Analisis Potensi Kesehatan</h2>
+                    <div id="health-analysis-content" class="text-sm text-gray-700 space-y-2"></div>
+                </div>
+                <div id="trigger-analysis-container" class="space-y-3">
+                    <h2 class="text-xl font-semibold text-gray-800">Analisis Pemicu Kejadian (Periode Ini)</h2>
+                    <div id="trigger-analysis-content" class="text-sm text-gray-700 space-y-2"></div>
+                </div>
+            </div>
+
+            <div id="master-predictive-container" class="hidden p-6 bg-red-50 rounded-lg border border-red-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-red-800">🚨 Analisis Prediktif Master: Fan Yin & Fu Yin</h2>
+                <div id="fanyin-fuyin-content" class="space-y-3"></div>
+            </div>
+
+            <div id="bazi-chart-display" class="hidden mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 text-center">Bagan BaZi & Periode</h2>
+                <div class="overflow-x-auto pb-4 mobile-scroll">
+                    <div id="chart-content" class="flex flex-nowrap space-x-2"></div>
+                </div>
+            </div>
+
+            <div id="dm-analysis-container" class="hidden grid md:grid-cols-3 gap-6 mb-6">
+                <div class="md:col-span-2 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Analisis Elemen Diri (Day Master)</h2>
+                    <div id="dm-strength-content" class="space-y-4"></div>
+                </div>
+                <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
+                    <h2 class="text-xl font-semibold mb-2 text-gray-800">Distribusi Kekuatan Efektif Elemen</h2>
+                    <div id="element-pie-chart-container" class="w-full h-64 flex items-center justify-center"></div>
+                </div>
+            </div>
+            
+            <div id="ten-gods-container" class="hidden p-6 bg-amber-50 rounded-lg border border-amber-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-amber-800">Peta 10 Dewa (Natal & Dinamis)</h2>
+                <p class="text-sm text-gray-600 mb-4">Analisis ini menunjukkan kekuatan bawaan (oranye) dan pengaruh periode (hijau/merah). Skor telah disesuaikan berdasarkan interaksi Clash & Combine internal untuk akurasi yang lebih tinggi.</p>
+                <div id="ten-gods-content" class="grid md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4"></div>
+            </div>
+            
+            <div id="periodic-gods-container" class="hidden p-6 bg-cyan-50 rounded-lg border border-cyan-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-cyan-800">Rangkuman Pengaruh Periode pada 10 Dewa</h2>
+                <p class="text-sm text-gray-600 mb-4">Bagian ini merangkum bagaimana Dayun, Liunian, dan Liu Yue (jika diisi) saat ini mengaktifkan, memperkuat, atau mengganggu potensi 10 Dewa bawaan Anda.</p>
+                <div id="periodic-gods-content" class="space-y-4"></div>
+            </div>
+
+            <div id="transformation-analysis-container" class="hidden p-6 bg-gray-50 rounded-lg border border-gray-200 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Analisis Transformasi Elemen</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div id="transformation-log-container" class="md:col-span-2 space-y-3"></div>
+                    <div id="dynamic-element-chart-container-wrapper">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Peta Elemen Dinamis</h3>
+                        <div id="dynamic-element-chart-container" class="w-full h-56 flex items-center justify-center"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="qi-flow-container" class="hidden p-6 bg-sky-50 rounded-lg border border-sky-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-sky-800">Peta Visual Aliran & Keseimbangan Qi</h2>
+                <p class="text-sm text-gray-600 mb-4">Diagram ini memvisualisasikan siklus produksi (hijau) dan kontrol (merah) antar elemen. Ketebalan panah menunjukkan kekuatan interaksi berdasarkan skor elemen di bagan Anda.</p>
+                <div id="qi-flow-visualization" class="w-full h-96 flex items-center justify-center"></div>
+            </div>
+
+            <div id="stem-effectiveness-container" class="hidden p-6 bg-purple-50 rounded-lg border border-purple-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-purple-800">Analisis Efektivitas Batang Langit (Rooted vs Unrooted)</h2>
+                <p class="text-sm text-gray-600 mb-4">Menganalisis apakah setiap Batang Langit di bagan natal memiliki akar yang kuat atau tidak. Ini menentukan apakah pengaruhnya nyata ("Jagoan Neon") atau hanya dangkal ("Bacot Doang").</p>
+                <div id="stem-effectiveness-content" class="grid md:grid-cols-2 gap-6"></div>
+            </div>
+
+            <div id="internal-dynamics-container" class="hidden p-6 bg-teal-50 rounded-lg border border-teal-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-teal-800">Analisis Kualitas Internal Pilar</h2>
+                <div id="internal-dynamics-content" class="grid md:grid-cols-2 gap-x-6 gap-y-4"></div>
+            </div>
+
+            <div id="periodic-analysis-container" class="hidden p-6 bg-indigo-50 rounded-lg border border-indigo-200 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-800">Analisis Dinamis Periode (Dayun, Liunian & Liuyue)</h2>
+                <div id="periodic-analysis-content" class="space-y-6"></div>
+            </div>
+
+            <div id="natal-analysis-container" class="p-6 bg-gray-50 rounded-lg border border-gray-200 min-h-[150px] mb-6 hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Analisis Interaksi Internal (Bagan Natal)</h2>
+                <div id="natal-analysis-content" class="text-gray-700 space-y-2"></div>
+            </div>
+
+            <div id="tougan-rooted-container-wrapper" class="p-6 bg-gray-50 rounded-lg border border-gray-200 min-h-[100px] mb-6 hidden">
+                <div id="tougan-rooted-container" class="space-y-4"></div>
+            </div>
+
+            <div id="ming-gua-analysis" class="p-6 bg-gray-50 rounded-lg border border-gray-200 min-h-[150px] hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Analisis Feng Shui Pribadi (Ming Gua):</h2>
+                <div id="ming-gua-content" class="text-gray-700 space-y-4"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top" title="Kembali ke Atas">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+    </button>
+
+    <!-- Chatbot Toggle Button -->
+    <button id="chat-toggle-button" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-transform transform hover:scale-110" title="Buka Asisten AI">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.828 8.828 0 01-4.32-1.125.5.5 0 01.138-.853A6.98 6.98 0 0010 15c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6c0 .537.075 1.056.214 1.553a.5.5 0 01-.84.53A8.008 8.008 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM4.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm5 0a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zm5 0a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" clip-rule="evenodd" />
+        </svg>
+    </button>
+
+    <!-- Chatbot Container -->
+    <div id="chatbot-container" class="bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b bg-gray-50 rounded-t-2xl">
+            <h3 class="font-bold text-gray-800">Asisten BaZi AI</h3>
+            <button id="close-chat-btn" class="text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <!-- Messages -->
+        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-4 flex flex-col">
+            <!-- Initial message -->
+            <div class="chat-message ai-message p-3 rounded-lg">
+                Halo! Saya asisten BaZi Anda. Silakan lakukan analisis terlebih dahulu, lalu ajukan pertanyaan tentang hasilnya di sini.
+            </div>
+        </div>
+        <!-- Input -->
+        <div class="p-3 border-t bg-white rounded-b-2xl">
+            <div class="flex items-center space-x-2">
+                <input type="text" id="chat-input" placeholder="Ketik pertanyaan Anda..." class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <button id="chat-send-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.428A1 1 0 009.894 15V5.116l-4.553 2.277a1 1 0 00-.638 1.285l.707 3.536a1 1 0 001.285.638l2.277-1.138a1 1 0 00.638-1.285l-.707-3.536a1 1 0 00-1.285-.638L10.894 2.553z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- KODE JAVASCRIPT INTI (DATABASE, FUNGSI ANALISIS, DLL) ---
+    // Semua kode JavaScript dari file asli Anda ditempatkan di sini.
+    // Tidak ada perubahan pada logika inti BaZi.
+    
+    // --- DATABASE (Struktur data tetap sama) ---
+    const HEAVENLY_STEMS = ['Jia', 'Yi', 'Bing', 'Ding', 'Wu', 'Ji', 'Geng', 'Xin', 'Ren', 'Gui'];
+    const EARTHLY_BRANCHES = ['Zi', 'Chou', 'Yin', 'Mao', 'Chen', 'Si', 'Wu', 'Wei', 'Shen', 'You', 'Xu', 'Hai'];
+    const STEM_DETAILS = { 'Jia': { hanzi: '甲', element: 'Wood', polarity: 'Yang' }, 'Yi': { hanzi: '乙', element: 'Wood', polarity: 'Yin' }, 'Bing': { hanzi: '丙', element: 'Fire', polarity: 'Yang' }, 'Ding': { hanzi: '丁', element: 'Fire', polarity: 'Yin' }, 'Wu': { hanzi: '戊', element: 'Earth', polarity: 'Yang' }, 'Ji': { hanzi: '己', element: 'Earth', polarity: 'Yin' }, 'Geng': { hanzi: '庚', element: 'Metal', polarity: 'Yang' }, 'Xin': { hanzi: '辛', element: 'Metal', polarity: 'Yin' }, 'Ren': { hanzi: '壬', element: 'Water', polarity: 'Yang' }, 'Gui': { hanzi: '癸', element: 'Water', polarity: 'Yin' } };
+    const BRANCH_DETAILS = { 'Zi': { hanzi: '子', pinyin: 'Zi', animal: 'Rat', polarity: 'Yang', element: 'Water' }, 'Chou': { hanzi: '丑', pinyin: 'Chou', animal: 'Ox', polarity: 'Yin', element: 'Earth' }, 'Yin': { hanzi: '寅', pinyin: 'Yin', animal: 'Tiger', polarity: 'Yang', element: 'Wood' }, 'Mao': { hanzi: '卯', pinyin: 'Mao', animal: 'Rabbit', polarity: 'Yin', element: 'Wood' }, 'Chen': { hanzi: '辰', pinyin: 'Chen', animal: 'Dragon', polarity: 'Yang', element: 'Earth' }, 'Si': { hanzi: '巳', pinyin: 'Si', animal: 'Snake', polarity: 'Yin', element: 'Fire' }, 'Wu': { hanzi: '午', pinyin: 'Wu', animal: 'Horse', polarity: 'Yang', element: 'Fire' }, 'Wei': { hanzi: '未', pinyin: 'Wei', animal: 'Goat', polarity: 'Yin', element: 'Earth' }, 'Shen': { hanzi: '申', pinyin: 'Shen', animal: 'Monkey', polarity: 'Yang', element: 'Metal' }, 'You': { hanzi: '酉', pinyin: 'You', animal: 'Rooster', polarity: 'Yin', element: 'Metal' }, 'Xu': { hanzi: '戌', pinyin: 'Xu', animal: 'Dog', polarity: 'Yang', element: 'Earth' }, 'Hai': { hanzi: '亥', pinyin: 'Hai', animal: 'Pig', polarity: 'Yin', element: 'Water' } };
+    const HIDDEN_STEMS = { 'Zi': [{ stem: 'Gui', isMain: true, qiType: 'Main' }], 'Chou': [{ stem: 'Ji', isMain: true, qiType: 'Main' }, { stem: 'Gui', isMain: false, qiType: 'Secondary' }, { stem: 'Xin', isMain: false, qiType: 'Remaining' }], 'Yin': [{ stem: 'Jia', isMain: true, qiType: 'Main' }, { stem: 'Bing', isMain: false, qiType: 'Secondary' }, { stem: 'Wu', isMain: false, qiType: 'Remaining' }], 'Mao': [{ stem: 'Yi', isMain: true, qiType: 'Main' }], 'Chen': [{ stem: 'Wu', isMain: true, qiType: 'Main' }, { stem: 'Yi', isMain: false, qiType: 'Secondary' }, { stem: 'Gui', isMain: false, qiType: 'Remaining' }], 'Si': [{ stem: 'Bing', isMain: true, qiType: 'Main' }, { stem: 'Geng', isMain: false, qiType: 'Secondary' }, { stem: 'Wu', isMain: false, qiType: 'Remaining' }], 'Wu': [{ stem: 'Ding', isMain: true, qiType: 'Main' }, { stem: 'Ji', isMain: false, qiType: 'Secondary' }], 'Wei': [{ stem: 'Ji', isMain: true, qiType: 'Main' }, { stem: 'Ding', isMain: false, qiType: 'Secondary' }, { stem: 'Yi', isMain: false, qiType: 'Remaining' }], 'Shen': [{ stem: 'Geng', isMain: true, qiType: 'Main' }, { stem: 'Ren', isMain: false, qiType: 'Secondary' }, { stem: 'Wu', isMain: false, qiType: 'Remaining' }], 'You': [{ stem: 'Xin', isMain: true, qiType: 'Main' }], 'Xu': [{ stem: 'Wu', isMain: true, qiType: 'Main' }, { stem: 'Xin', isMain: false, qiType: 'Secondary' }, { stem: 'Ding', isMain: false, qiType: 'Remaining' }], 'Hai': [{ stem: 'Ren', isMain: true, qiType: 'Main' }, { stem: 'Jia', isMain: false, qiType: 'Secondary' }] };
+    const FIVE_ELEMENT_RELATIONSHIP = { 'Wood': { produces: 'Fire', controls: 'Earth', producedBy: 'Water', controlledBy: 'Metal' }, 'Fire': { produces: 'Earth', controls: 'Metal', producedBy: 'Wood', controlledBy: 'Water' }, 'Earth': { produces: 'Metal', controls: 'Water', producedBy: 'Fire', controlledBy: 'Wood' }, 'Metal': { produces: 'Water', controls: 'Wood', producedBy: 'Earth', controlledBy: 'Fire' }, 'Water': { produces: 'Wood', controls: 'Fire', producedBy: 'Metal', controlledBy: 'Earth' } };
+    const TEN_GODS_MAP = { produces: { same: { name: 'Eating God', abbr: 'EG', hanzi: '食神' }, diff: { name: 'Hurting Officer', abbr: 'HO', hanzi: '伤官' } }, controls: { same: { name: 'Indirect Wealth', abbr: 'IW', hanzi: '偏财' }, diff: { name: 'Direct Wealth', abbr: 'DW', hanzi: '正财' } }, controlledBy: { same: { name: '7 Killings', abbr: '7K', hanzi: '七杀' }, diff: { name: 'Direct Officer', abbr: 'DO', hanzi: '正官' } }, producedBy: { same: { name: 'Indirect Resource', abbr: 'IR', hanzi: '偏印' }, diff: { name: 'Direct Resource', abbr: 'DR', hanzi: '正印' } }, same: { same: { name: 'Friend', abbr: 'F', hanzi: '比肩' }, diff: { name: 'Rob Wealth', abbr: 'RW', hanzi: '劫财' } } };
+    const GOD_ELEMENT_RELATIONSHIP = { 'Eating God': 'produces', 'Hurting Officer': 'produces', 'Direct Wealth': 'controls', 'Indirect Wealth': 'controls', 'Direct Officer': 'controlledBy', '7 Killings': 'controlledBy', 'Direct Resource': 'producedBy', 'Indirect Resource': 'producedBy', 'Friend': 'same', 'Rob Wealth': 'same' };
+    const LIFE_STAGES_MATRIX = { 'Jia': [ 'Bath', 'Youth', 'Officer', 'Peak', 'Decline', 'Sickness', 'Death', 'Grave', 'Extinction', 'Conception','Nourish',  'Growth'], 'Yi':   [ 'Sickness', 'Decline', 'Peak', 'Officer', 'Youth', 'Bath', 'Growth', 'Nourish', 'Conception', 'Extinction','Grave', 'Death' ], 'Bing': [ 'Conception','Nourish', 'Growth', 'Bath', 'Youth', 'Officer', 'Peak', 'Decline', 'Sickness', 'Death', 'Grave', 'Extinction' ], 'Ding': [ 'Extinction','Grave', 'Death', 'Sickness', 'Decline', 'Peak', 'Officer', 'Youth', 'Bath', 'Growth', 'Nourish', 'Conception' ], 'Wu':   [ 'Conception','Nourish', 'Growth', 'Bath', 'Youth', 'Officer', 'Peak', 'Decline', 'Sickness', 'Death', 'Grave', 'Extinction' ], 'Ji':   [ 'Extinction','Grave', 'Death', 'Sickness', 'Decline', 'Peak', 'Officer', 'Youth', 'Bath', 'Growth', 'Nourish', 'Conception' ], 'Geng': [ 'Death', 'Grave', 'Extinction','Conception','Nourish', 'Growth', 'Bath', 'Youth', 'Officer', 'Peak', 'Decline', 'Sickness' ], 'Xin':  [ 'Growth', 'Nourish', 'Conception','Extinction','Grave', 'Death', 'Sickness', 'Decline', 'Peak', 'Officer', 'Youth', 'Bath'  ], 'Ren':  [ 'Peak', 'Decline', 'Sickness', 'Death', 'Grave', 'Extinction','Conception','Nourish', 'Growth', 'Bath', 'Youth', 'Officer' ], 'Gui':  [ 'Officer', 'Youth', 'Bath', 'Growth', 'Nourish', 'Conception','Extinction','Grave', 'Death', 'Sickness', 'Decline', 'Peak' ] };
+    const LIFE_STAGES_HANZI = { 'Growth':'长生', 'Bath':'沐浴', 'Youth':'冠带', 'Officer':'临官', 'Peak':'帝旺', 'Decline':'衰', 'Sickness':'病', 'Death':'死', 'Grave':'墓', 'Extinction':'绝', 'Conception':'胎', 'Nourish':'养' };
+    const INTERACTIONS = { COMBINE_6: { 'Zi': 'Chou', 'Yin': 'Hai', 'Mao': 'Xu', 'Chen': 'You', 'Si': 'Shen', 'Wu': 'Wei' }, CLASH: { 'Zi': 'Wu', 'Chou': 'Wei', 'Yin': 'Shen', 'Mao': 'You', 'Chen': 'Xu', 'Si': 'Hai' }, HARM: { 'Zi': 'Wei', 'Chou': 'Wu', 'Yin': 'Si', 'Mao': 'Chen', 'Shen': 'Hai', 'You': 'Xu' }, PUNISHMENT: { UNGRATEFUL: { 'Zi': 'Mao' }, BULLYING: { 'Yin': 'Si', 'Si': 'Shen', 'Shen': 'Yin' }, UNCIVILIZED: ['Yin', 'Si', 'Shen'], SELF: ['Chen', 'Wu', 'You', 'Hai'] }, DESTRUCTION: { 'Zi': 'You', 'Chou': 'Chen', 'Yin': 'Hai', 'Mao': 'Wu', 'Si': 'Shen', 'Wei': 'Xu' }, COMBINE_3_HARMONY: { 'Water': ['Shen', 'Zi', 'Chen'], 'Wood': ['Hai', 'Mao', 'Wei'], 'Fire': ['Yin', 'Wu', 'Xu'], 'Metal': ['Si', 'You', 'Chou'] }, COMBINE_3_DIRECTIONAL: { 'Wood': ['Yin', 'Mao', 'Chen'], 'Fire': ['Si', 'Wu', 'Wei'], 'Metal': ['Shen', 'You', 'Xu'], 'Water': ['Hai', 'Zi', 'Chou'] } };
+    const STEM_COMBINE = { 'Jia': 'Ji', 'Yi': 'Geng', 'Bing': 'Xin', 'Ding': 'Ren', 'Wu': 'Gui' };
+    const STEM_CLASH = { 'Jia': 'Geng', 'Yi': 'Xin', 'Bing': 'Ren', 'Ding': 'Gui', 'Wu': 'Jia', 'Ji': 'Yi', 'Geng': 'Jia', 'Xin': 'Yi', 'Ren': 'Bing', 'Gui': 'Ding' };
+    const SPECIAL_STARS_RULES = { NOBLE_PEOPLE: { 'Jia': ['Chou', 'Wei'], 'Wu': ['Chou', 'Wei'], 'Geng': ['Chou', 'Wei'], 'Yi': ['Zi', 'Shen'], 'Ji': ['Zi', 'Shen'], 'Bing': ['Hai', 'You'], 'Ding': ['Hai', 'You'], 'Ren': ['Mao', 'Si'], 'Gui': ['Mao', 'Si'], 'Xin': ['Yin', 'Wu'] }, CELESTIAL_NOBLE_BY_BRANCH: { 'Yin': ['Hai', 'You'], 'Wu': ['Hai', 'You'], 'Xu': ['Hai', 'You'], 'Si': ['Yin', 'Wu'], 'You': ['Yin', 'Wu'], 'Chou': ['Yin', 'Wu'], 'Shen': ['Mao', 'Si'], 'Zi': ['Mao', 'Si'], 'Chen': ['Mao', 'Si'], 'Hai': ['Zi', 'Shen'], 'Mao': ['Zi', 'Shen'], 'Wei': ['Zi', 'Shen'] }, TAI_JI_NOBLE: { 'Jia': ['Zi', 'Wu'], 'Yi': ['Zi', 'Wu'], 'Bing': ['You', 'Mao'], 'Ding': ['You', 'Mao'], 'Wu': ['Chen', 'Xu', 'Chou', 'Wei'], 'Ji': ['Chen', 'Xu', 'Chou', 'Wei'], 'Geng': ['Yin', 'Hai'], 'Xin': ['Yin', 'Hai'], 'Ren': ['Si', 'Shen'], 'Gui': ['Si', 'Shen'] }, INTELLIGENCE: { 'Jia': 'Si', 'Yi': 'Wu', 'Bing': 'Shen', 'Wu': 'Shen', 'Ding': 'You', 'Ji': 'You', 'Geng': 'Hai', 'Xin': 'Zi', 'Ren': 'Yin', 'Gui': 'Mao' }, PEACH_BLOSSOM: { 'Shen': 'You', 'Zi': 'You', 'Chen': 'You', 'Yin': 'Mao', 'Wu': 'Mao', 'Xu': 'Mao', 'Hai': 'Zi', 'Mao': 'Zi', 'Wei': 'Zi', 'Si': 'Wu', 'You': 'Wu', 'Chou': 'Wu' }, SKY_HORSE: { 'Shen': 'Yin', 'Zi': 'Yin', 'Chen': 'Yin', 'Yin': 'Shen', 'Wu': 'Shen', 'Xu': 'Shen', 'Hai': 'Si', 'Mao': 'Si', 'Wei': 'Si', 'Si': 'Hai', 'You': 'Hai', 'Chou': 'Hai' }, SOLITARY_STAR: { 'Hai': 'Yin', 'Zi': 'Yin', 'Chou': 'Yin', 'Yin': 'Si', 'Mao': 'Si', 'Chen': 'Si', 'Si': 'Shen', 'Wu': 'Shen', 'Wei': 'Shen', 'Shen': 'Hai', 'You': 'Hai', 'Xu': 'Hai' } };
+    const BRANCH_MAIN_ELEMENT = { 'Yin': 'Wood', 'Mao': 'Wood', 'Si': 'Fire', 'Wu': 'Fire', 'Shen': 'Metal', 'You': 'Metal', 'Hai': 'Water', 'Zi': 'Water', 'Chen': 'Earth', 'Xu': 'Earth', 'Chou': 'Earth', 'Wei': 'Earth' };
+    const ELEMENT_GRAVE = { 'Wood': 'Wei', 'Fire': 'Xu', 'Earth': 'Xu', 'Metal': 'Chou', 'Water': 'Chen' };
+    const ADDITIONAL_SHEN_SHA_RULES_DEF = { RED_MATCHMAKER: { 'Zi': 'Mao', 'Chou': 'Yin', 'Yin': 'Chou', 'Mao': 'Zi', 'Chen': 'Hai', 'Si': 'Xu', 'Wu': 'You', 'Wei': 'Shen', 'Shen': 'Wei', 'You': 'Wu', 'Xu': 'Si', 'Hai': 'Chen' }, RED_CHAMBER: { 'Jia': 'Wu', 'Yi': 'Shen', 'Bing': 'Yin', 'Ding': 'Wei', 'Wu': 'Chen', 'Ji': 'Chen', 'Geng': 'Xu', 'Xin': 'You', 'Ren': 'Zi', 'Gui': 'Shen' }, GOLD_CARRIAGE: { 'Jia': 'Chen', 'Yi': 'Si', 'Bing': 'Wei', 'Ding': 'Shen', 'Wu': 'Wei', 'Ji': 'Shen', 'Geng': 'Xu', 'Xin': 'Hai', 'Ren': 'Chou', 'Gui': 'Yin' }, FLYING_BLADE: { 'Zi': 'Mao', 'Chou': 'Chen', 'Yin': 'Si', 'Mao': 'Wu', 'Chen': 'Wei', 'Si': 'Shen', 'Wu': 'You', 'Wei': 'Xu', 'Shen': 'Hai', 'You': 'Zi', 'Xu': 'Chou', 'Hai': 'Yin' }, LITIGATION: { 'Zi': 'Si', 'Chou': 'Wu', 'Yin': 'Wei', 'Mao': 'Shen', 'Chen': 'You', 'Si': 'Xu', 'Wu': 'Hai', 'Wei': 'Zi', 'Shen': 'Chou', 'You': 'Yin', 'Xu': 'Mao', 'Hai': 'Chen' }, CASCADING_CLOUDS: { 'Jia': 'You', 'Yi': 'Xu', 'Bing': 'Chou', 'Ding': 'Yin', 'Wu': 'Mao', 'Ji': 'Chen', 'Geng': 'Wu', 'Xin': 'Wei', 'Ren': 'Shen', 'Gui': 'Hai' }, STUDY_HALL: { 'Jia': 'Hai', 'Yi': 'Wu', 'Bing': 'Yin', 'Ding': 'You', 'Wu': 'Yin', 'Ji': 'You', 'Geng': 'Si', 'Xin': 'Zi', 'Ren': 'Shen', 'Gui': 'Mao' }, SICKNESS: (yearBranch) => EARTHLY_BRANCHES[(EARTHLY_BRANCHES.indexOf(yearBranch) + 11) % 12], FIVE_GHOST: (yearBranch) => EARTHLY_BRANCHES[(EARTHLY_BRANCHES.indexOf(yearBranch) + 4) % 12], BLOOD_KNIFE: { 'Fire': 'Mao', 'Water': 'You', 'Metal': 'Wu', 'Wood': 'Zi' }, FORTUNE_VIRTUE: { 'Jia': 'Yin', 'Ji': 'Yin', 'Yi': 'Zi', 'Geng': 'Zi', 'Bing': 'Shen', 'Xin': 'Shen', 'Ding': 'Wu', 'Ren': 'Wu', 'Wu': 'Chen', 'Gui': 'Chen' }, GOLDEN_LOCK: { 'Jia': 'Chou', 'Yi': 'Yin', 'Bing': 'Si', 'Ding': 'Wu', 'Wu': 'Wei', 'Ji': 'Shen', 'Geng': 'You', 'Xin': 'Xu', 'Ren': 'Hai', 'Gui': 'Zi' } };
+    const NEW_SHEN_SHA_RULES_DEF = { TIAN_DE_STEM: { 'Yin': 'Ding', 'Mao': 'Shen', 'Chen': 'Ren', 'Si': 'Xin', 'Wu': 'Hai', 'Wei': 'Jia', 'Shen': 'Gui', 'You': 'Yin', 'Xu': 'Bing', 'Hai': 'Yi', 'Zi': 'Si', 'Chou': 'Geng' }, YUE_DE_STEM: { 'Fire': 'Bing', 'Metal': 'Geng', 'Water': 'Ren', 'Wood': 'Jia' }, GENERAL_STAR: { 'Fire': 'Wu', 'Metal': 'You', 'Water': 'Zi', 'Wood': 'Mao' }, ELEGANT_SEAL: { 'Fire': 'Xu', 'Metal': 'Chou', 'Water': 'Chen', 'Wood': 'Wei' }, ROBBERY_SHA: { 'Fire': 'Hai', 'Metal': 'Yin', 'Water': 'Si', 'Wood': 'Shen' }, MOURNING_DOOR: (yearBranch) => EARTHLY_BRANCHES[(EARTHLY_BRANCHES.indexOf(yearBranch) + 2) % 12], SEPARATING_EDGE: { 'Fire': 'You', 'Metal': 'Mao', 'Water': 'Wei', 'Wood': 'Chou' } };
+    const SHEN_SHA_DATABASE = { 'Noble People': { rule: (p, chart) => (SPECIAL_STARS_RULES.NOBLE_PEOPLE[chart.day.stem] || []).includes(p.branch), color: 'text-black font-semibold' }, 'Celestial Nobleman':{ rule: (p, chart) => { const noble = SPECIAL_STARS_RULES.NOBLE_PEOPLE[chart.day.stem] || []; const celestial = SPECIAL_STARS_RULES.CELESTIAL_NOBLE_BY_BRANCH[chart.day.branch] || []; const isSame = noble.sort().join(',') === celestial.sort().join(','); return !isSame && celestial.includes(p.branch); }, color: 'text-black font-semibold' }, 'Tai Ji Nobleman': { rule: (p, chart) => (SPECIAL_STARS_RULES.TAI_JI_NOBLE[chart.day.stem] || []).includes(p.branch), color: 'text-black font-semibold' }, 'Intelligence': { rule: (p, chart) => SPECIAL_STARS_RULES.INTELLIGENCE[chart.day.stem] === p.branch, color: 'text-black font-semibold' }, 'Peach Blossom': { rule: (p, chart) => SPECIAL_STARS_RULES.PEACH_BLOSSOM[chart.day.branch] === p.branch, color: 'text-pink-600' }, 'Sky Horse': { rule: (p, chart) => SPECIAL_STARS_RULES.SKY_HORSE[chart.day.branch] === p.branch, color: 'text-black font-semibold' }, 'Solitary Star': { rule: (p, chart) => SPECIAL_STARS_RULES.SOLITARY_STAR[chart.year.branch] === p.branch, color: 'text-gray-500' }, 'Red Matchmaker': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.RED_MATCHMAKER[chart.year.branch] === p.branch, color: 'text-pink-600' }, 'Red Chamber': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.RED_CHAMBER[chart.day.stem] === p.branch, color: 'text-pink-600' }, 'Gold Carriage': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.GOLD_CARRIAGE[chart.day.stem] === p.branch, color: 'text-yellow-600' }, 'Flying Blade': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.FLYING_BLADE[chart.year.branch] === p.branch, color: 'text-red-600' }, 'Litigation': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.LITIGATION[chart.year.branch] === p.branch, color: 'text-red-600' }, 'Cascading Clouds': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.CASCADING_CLOUDS[chart.day.stem] === p.branch, color: 'text-red-600' }, 'Study Hall': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.STUDY_HALL[chart.day.stem] === p.branch, color: 'text-blue-600' }, 'Sickness': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.SICKNESS(chart.year.branch) === p.branch, color: 'text-red-600' }, 'Five Ghost': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.FIVE_GHOST(chart.year.branch) === p.branch, color: 'text-red-600' }, 'Blood Knife': { rule: (p, chart) => { const frame = getBranchFrame(chart.year.branch); return frame && ADDITIONAL_SHEN_SHA_RULES_DEF.BLOOD_KNIFE[frame] === p.branch; }, color: 'text-red-600' }, 'Fortune Virtue': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.FORTUNE_VIRTUE[chart.year.stem] === p.branch, color: 'text-yellow-600' }, 'Golden Lock': { rule: (p, chart) => ADDITIONAL_SHEN_SHA_RULES_DEF.GOLDEN_LOCK[chart.year.stem] === p.branch, color: 'text-yellow-600' }, 'Grand Duke': { rule: (p, chart) => chart.liunian && chart.liunian.branch === p.branch, color: 'text-red-600 font-bold' }, 'Year Punishment': { rule: (p, chart) => chart.liunian && chart.liunian.branch && INTERACTIONS.PUNISHMENT.UNGRATEFUL[chart.liunian.branch] === p.branch, color: 'text-red-600 font-bold' }, 'Heavenly Virtue': { rule: (p, chart) => NEW_SHEN_SHA_RULES_DEF.TIAN_DE_STEM[chart.month.branch] === p.stem, color: 'text-green-600 font-semibold' }, 'Monthly Virtue': { rule: (p, chart) => { const frame = getBranchFrame(chart.month.branch); return frame && NEW_SHEN_SHA_RULES_DEF.YUE_DE_STEM[frame] === p.stem; }, color: 'text-green-600 font-semibold' }, 'General Star': { rule: (p, chart) => { const yearFrame = getBranchFrame(chart.year.branch); const dayFrame = getBranchFrame(chart.day.branch); return (yearFrame && NEW_SHEN_SHA_RULES_DEF.GENERAL_STAR[yearFrame] === p.branch) || (dayFrame && NEW_SHEN_SHA_RULES_DEF.GENERAL_STAR[dayFrame] === p.branch); }, color: 'text-green-600' }, 'Elegant Seal': { rule: (p, chart) => { const yearFrame = getBranchFrame(chart.year.branch); const dayFrame = getBranchFrame(chart.day.branch); return (yearFrame && NEW_SHEN_SHA_RULES_DEF.ELEGANT_SEAL[yearFrame] === p.branch) || (dayFrame && NEW_SHEN_SHA_RULES_DEF.ELEGANT_SEAL[dayFrame] === p.branch); }, color: 'text-blue-600' }, 'Robbery Sha': { rule: (p, chart) => { const yearFrame = getBranchFrame(chart.year.branch); const dayFrame = getBranchFrame(chart.day.branch); return (yearFrame && NEW_SHEN_SHA_RULES_DEF.ROBBERY_SHA[yearFrame] === p.branch) || (dayFrame && NEW_SHEN_SHA_RULES_DEF.ROBBERY_SHA[dayFrame] === p.branch); }, color: 'text-purple-600' }, 'Mourning Door': { rule: (p, chart) => NEW_SHEN_SHA_RULES_DEF.MOURNING_DOOR(chart.year.branch) === p.branch, color: 'text-purple-600' }, 'Separating Edge': { rule: (p, chart) => { const yearFrame = getBranchFrame(chart.year.branch); const dayFrame = getBranchFrame(chart.day.branch); return (yearFrame && NEW_SHEN_SHA_RULES_DEF.SEPARATING_EDGE[yearFrame] === p.branch) || (dayFrame && NEW_SHEN_SHA_RULES_DEF.SEPARATING_EDGE[dayFrame] === p.branch); }, color: 'text-purple-600' } };
+    const MING_GUA_DIRECTIONS = { 1: { group: 'Timur', directions: { 'SE': 'Sheng Qi', 'E': 'Tian Yi', 'S': 'Yan Nian', 'N': 'Fu Wei', 'W': 'Huo Hai', 'NW': 'Wu Gui', 'SW': 'Liu Sha', 'NE': 'Jue Ming' } }, 2: { group: 'Barat', directions: { 'NE': 'Sheng Qi', 'W': 'Tian Yi', 'NW': 'Yan Nian', 'SW': 'Fu Wei', 'E': 'Huo Hai', 'S': 'Wu Gui', 'N': 'Liu Sha', 'SE': 'Jue Ming' } }, 3: { group: 'Timur', directions: { 'S': 'Sheng Qi', 'N': 'Tian Yi', 'SE': 'Yan Nian', 'E': 'Fu Wei', 'SW': 'Huo Hai', 'NE': 'Wu Gui', 'W': 'Liu Sha', 'NW': 'Jue Ming' } }, 4: { group: 'Timur', directions: { 'N': 'Sheng Qi', 'S': 'Tian Yi', 'E': 'Yan Nian', 'SE': 'Fu Wei', 'NW': 'Huo Hai', 'W': 'Wu Gui', 'NE': 'Liu Sha', 'SW': 'Jue Ming' } }, 6: { group: 'Barat', directions: { 'W': 'Sheng Qi', 'NE': 'Tian Yi', 'SW': 'Yan Nian', 'NW': 'Fu Wei', 'SE': 'Huo Hai', 'N': 'Wu Gui', 'S': 'Liu Sha', 'E': 'Jue Ming' } }, 7: { group: 'Barat', directions: { 'NW': 'Sheng Qi', 'SW': 'Tian Yi', 'W': 'Yan Nian', 'NE': 'Fu Wei', 'N': 'Huo Hai', 'SE': 'Wu Gui', 'E': 'Liu Sha', 'S': 'Jue Ming' } }, 8: { group: 'Barat', directions: { 'SW': 'Sheng Qi', 'NW': 'Tian Yi', 'NE': 'Yan Nian', 'W': 'Fu Wei', 'S': 'Huo Hai', 'E': 'Wu Gui', 'SE': 'Liu Sha', 'N': 'Jue Ming' } }, 9: { group: 'Timur', directions: { 'E': 'Sheng Qi', 'SE': 'Tian Yi', 'N': 'Yan Nian', 'S': 'Fu Wei', 'NE': 'Huo Hai', 'SW': 'Wu Gui', 'NW': 'Liu Sha', 'W': 'Jue Ming' } } };
+    const DIRECTION_DETAILS = { 'Sheng Qi': { name: 'Energi Pertumbuhan', desc: 'Arah Kesuksesan & Kemakmuran Terbaik', type: 'good' }, 'Tian Yi': { name: 'Dokter Langit', desc: 'Arah Kesehatan & Penyembuhan', type: 'good' }, 'Yan Nian': { name: 'Umur Panjang', desc: 'Arah Hubungan Harmonis & Keluarga', type: 'good' }, 'Fu Wei': { name: 'Stabilitas', desc: 'Arah Ketenangan & Pengembangan Diri', type: 'good' }, 'Huo Hai': { name: 'Kecelakaan', desc: 'Arah Rintangan & Masalah Kecil', type: 'bad' }, 'Wu Gui': { name: 'Lima Hantu', desc: 'Arah Gosip, Konflik & Pengkhianatan', type: 'bad' }, 'Liu Sha': { name: 'Enam Pembunuhan', desc: 'Arah Skandal & Masalah Hukum', type: 'bad' }, 'Jue Ming': { name: 'Kehancuran Total', desc: 'Arah Terburuk, Kerugian & Penyakit', type: 'bad' } };
+    const LIFE_PALACES = { year: 'Sosial/Leluhur', month: 'Karir/Orang Tua', day: 'Diri/Pasangan', hour: 'Anak/Masa Depan', dayun: 'Periode 10 Thn', liunian: 'Tahun Ini', liuyue: 'Bulan Ini' };
+    const INTERACTION_CONTEXT = { CLASH: "Potensi adanya perubahan mendadak, pergerakan, atau konflik yang berkaitan dengan istana-istana yang terlibat. Seringkali menandakan tantangan yang perlu diatasi.", COMBINE_6: "Menunjukkan adanya hubungan yang kuat, ketertarikan, atau keharmonisan. Bisa mengunci pilar dan menunda suatu kejadian, baik atau buruk.", HARM: "Potensi pengkhianatan, kesalahpahaman, atau masalah tersembunyi. Seringkali melibatkan emosi dan hubungan dekat.", DESTRUCTION: "Menandakan kerusakan atau sabotase terhadap hubungan atau pencapaian. Interaksi yang merusak secara perlahan dari dalam.", PUNISHMENT_UNGRATEFUL: "Masalah yang timbul dari kurangnya sopan santun atau rasa tidak berterima kasih. Sering berhubungan dengan figur otoritas atau orang tua.", PUNISHMENT_BULLYING: "Potensi adanya penindasan, masalah hukum, atau situasi di mana kekuatan disalahgunakan. Melibatkan pilar yang saling mendominasi.", PUNISHMENT_UNCIVILIZED: "Gabungan dari tiga hukuman bullying, menciptakan potensi masalah hukum yang serius, kecelakaan, atau penyakit yang signifikan.", PUNISHMENT_SELF: "Kecenderungan untuk menyabotase diri sendiri, stres berlebih, atau memiliki pikiran negatif. Masalah yang diciptakan oleh diri sendiri.", COMBINE_3_HARMONY: "Kombinasi yang sangat kuat, menciptakan elemen baru yang dominan dalam chart. Menunjukkan potensi besar untuk tujuan bersama atau proyek besar.", COMBINE_3_DIRECTIONAL: "Kombinasi musiman yang paling kuat. Menciptakan kekuatan elemen yang luar biasa, menunjukkan dukungan lingkungan yang sangat kuat.", STEM_COMBINE: "Menandakan afinitas atau hubungan khusus antara dua aspek kehidupan yang diwakili oleh pilar-pilar tersebut. Bisa menghasilkan elemen baru jika kondisi terpenuhi.", GRAVE_OPENING: "Membuka 'gudang' elemen. Bisa berarti mendapatkan akses ke kekayaan/kemampuan tersembunyi, atau bisa juga berarti masalah kesehatan/kehilangan jika elemen tersebut tidak baik." };
+    const ELEMENT_COLORS = { 'Wood': '#10B981', 'Fire': '#EF4444', 'Earth': '#F59E0B', 'Metal': '#6B7280', 'Water': '#3B82F6' };
+    const CHART_STRUCTURES = { 'Friendship': 'Bagan Dominan Diri (比劫格)', 'Output': 'Bagan Dominan Output (食伤格)', 'Wealth': 'Bagan Dominan Harta (财格)', 'Influence': 'Bagan Dominan Kuasa (官杀格)', 'Resource': 'Bagan Dominan Sumber (印格)' };
+    const TEN_GODS_PERSONALITY = { 'Eating God': 'Seorang yang santai, artistik, dan menikmati hidup. Kreativitas mengalir secara alami.', 'Hurting Officer': 'Cerdas, tajam, dan pemberontak. Punya standar tinggi dan tidak suka dibatasi.', 'Direct Wealth': 'Praktis, hemat, dan dapat diandalkan. Menghargai stabilitas dan bekerja keras untuk keamanan finansial.', 'Indirect Wealth': 'Murah hati, oportunistik, dan pandai bergaul. Hebat dalam melihat peluang bisnis dan sosial.', 'Direct Officer': 'Bertanggung jawab, taat aturan, dan punya integritas. Menghargai reputasi dan struktur.', '7 Killings': 'Berani, kompetitif, dan berorientasi pada tindakan. Mampu mengatasi tekanan besar dan memimpin.', 'Direct Resource': 'Cerdas, suka belajar, dan penyayang. Selalu mencari pengetahuan dan suka membantu.', 'Indirect Resource': 'Intuitif, punya banyak minat, dan berpikir out-of-the-box. Sering memiliki keahlian atau pemahaman yang tidak biasa.', 'Friend': 'Mandiri, percaya diri, dan suka bekerja sama dengan setara. Punya kemauan yang kuat.', 'Rob Wealth': 'Karismatik, pandai berjejaring, dan ambisius. Punya kemampuan untuk memimpin dan memengaruhi orang lain.' };
+    const ELEMENT_HEALTH_MAP = { 'Wood': { organ: 'Hati, Kantung Empedu', system: 'Sistem Saraf, Anggota Gerak, Mata', issue: 'Masalah liver, mata, sakit kepala, kram, atau masalah terkait saraf.' }, 'Fire': { organ: 'Jantung, Usus Kecil', system: 'Sistem Sirkulasi Darah, Lidah', issue: 'Masalah jantung, tekanan darah, peradangan, atau masalah peredaran darah.' }, 'Earth': { organ: 'Limpa, Lambung', system: 'Sistem Pencernaan, Otot, Mulut', issue: 'Masalah pencernaan, diabetes, masalah otot, atau sariawan.' }, 'Metal': { organ: 'Paru-paru, Usus Besar', system: 'Sistem Pernapasan, Kulit, Hidung', issue: 'Masalah pernapasan, alergi kulit, sembelit, atau masalah sinus.' }, 'Water': { organ: 'Ginjal, Kandung Kemih', system: 'Sistem Reproduksi & Urinasi, Tulang, Telinga', issue: 'Masalah ginjal, hormonal, masalah tulang, atau gangguan pendengaran.' } };
+    const NA_YIN_MAP = {
+        'Jia Zi': 'Logam di Dasar Lautan', 'Yi Chou': 'Logam di Dasar Lautan', 'Bing Yin': 'Api di Dalam Tungku', 'Ding Mao': 'Api di Dalam Tungku', 'Wu Chen': 'Kayu di Hutan Besar', 'Ji Si': 'Kayu di Hutan Besar', 'Geng Wu': 'Tanah di Tepi Jalan', 'Xin Wei': 'Tanah di Tepi Jalan', 'Ren Shen': 'Logam di Ujung Pedang', 'Gui You': 'Logam di Ujung Pedang',
+        'Jia Xu': 'Api di Atas Gunung', 'Yi Hai': 'Api di Atas Gunung', 'Bing Zi': 'Air di Bawah Jurang', 'Ding Chou': 'Air di Bawah Jurang', 'Wu Yin': 'Tanah di Atas Tembok Kota', 'Ji Mao': 'Tanah di Atas Tembok Kota', 'Geng Chen': 'Logam dari Emas Putih', 'Xin Si': 'Logam dari Emas Putih', 'Ren Wu': 'Kayu dari Pohon Willow', 'Gui Wei': 'Kayu dari Pohon Willow',
+        'Jia Shen': 'Air dari Mata Air', 'Yi You': 'Air dari Mata Air', 'Bing Xu': 'Tanah di Atap Rumah', 'Ding Hai': 'Tanah di Atap Rumah', 'Wu Zi': 'Api dari Petir', 'Ji Chou': 'Api dari Petir', 'Geng Yin': 'Kayu dari Pohon Pinus', 'Xin Mao': 'Kayu dari Pohon Pinus', 'Ren Chen': 'Air dari Sungai Panjang', 'Gui Si': 'Air dari Sungai Panjang',
+        'Jia Wu': 'Logam dalam Pasir Emas', 'Yi Wei': 'Logam dalam Pasir Emas', 'Bing Shen': 'Api di Kaki Gunung', 'Ding You': 'Api di Kaki Gunung', 'Wu Xu': 'Kayu di Dataran Rendah', 'Ji Hai': 'Kayu di Dataran Rendah', 'Geng Zi': 'Tanah di Dinding', 'Xin Chou': 'Tanah di Dinding', 'Ren Yin': 'Logam dari Lapisan Emas', 'Gui Mao': 'Logam dari Lapisan Emas',
+        'Jia Chen': 'Api dari Lentera', 'Yi Si': 'Api dari Lentera', 'Bing Wu': 'Air dari Surga', 'Ding Wei': 'Air dari Surga', 'Wu Shen': 'Tanah dari Stasiun Besar', 'Ji You': 'Tanah dari Stasiun Besar', 'Geng Xu': 'Logam dari Perhiasan', 'Xin Hai': 'Logam dari Perhiasan', 'Ren Zi': 'Kayu dari Pohon Mulberry', 'Gui Chou': 'Kayu dari Pohon Mulberry',
+        'Jia Yin': 'Air di Sungai Besar', 'Yi Mao': 'Air di Sungai Besar', 'Bing Chen': 'Tanah di dalam Pasir', 'Ding Si': 'Tanah di dalam Pasir', 'Wu Wu': 'Api di Surga', 'Ji Wei': 'Api di Surga', 'Geng Shen': 'Kayu dari Pohon Delima', 'Xin You': 'Kayu dari Pohon Delima', 'Ren Xu': 'Air dari Samudra Luas', 'Gui Hai': 'Air dari Samudra Luas'
+    };
+    const STRATEGY_DATABASE = {
+        USEFUL_ELEMENT_ACTIONS: {
+            'Wood': "Lakukan aktivitas yang berhubungan dengan pertumbuhan dan kreativitas. Berkebun, menulis, atau memulai proyek baru bisa sangat bermanfaat.",
+            'Fire': "Tingkatkan visibilitas Anda. Berbicara di depan umum, aktif di media sosial, atau terlibat dalam industri hiburan/teknologi akan membawa energi positif.",
+            'Earth': "Fokus pada stabilitas dan kepercayaan. Membangun fondasi yang kuat dalam karir atau hubungan, serta terlibat dalam properti atau agrikultur, sangat disarankan.",
+            'Metal': "Tegakkan disiplin dan struktur. Membuat jadwal yang jelas, fokus pada detail, dan berlatih bela diri atau manajemen akan memperkuat Anda.",
+            'Water': "Perbanyak komunikasi dan pergerakan. Networking, belajar bahasa baru, traveling, atau bekerja di industri logistik/komunikasi akan sangat baik."
+        },
+        GOD_STRATEGIES: {
+            'Direct Officer': "Manfaatkan energi kepemimpinan dan tanggung jawab Anda. Ini adalah waktu yang baik untuk menunjukkan integritas dan mengejar posisi yang lebih tinggi.",
+            '7 Killings': "Salurkan keberanian dan daya saing Anda ke dalam tantangan yang konstruktif. Ambil proyek sulit yang bisa menunjukkan kemampuan Anda dalam mengatasi tekanan.",
+            'Direct Wealth': "Fokus pada pengelolaan keuangan yang cermat dan kerja keras yang konsisten. Stabilitas finansial adalah kunci Anda saat ini.",
+            'Indirect Wealth': "Mata Anda sedang tajam melihat peluang. Jangan ragu untuk berjejaring dan mengeksplorasi bisnis sampingan atau investasi yang terukur.",
+            'Eating God': "Biarkan kreativitas Anda mengalir. Ini adalah waktu yang tepat untuk menikmati hidup, mengekspresikan diri melalui seni, atau sekadar bersantai.",
+            'Hurting Officer': "Gunakan kecerdasan dan ide-ide brilian Anda untuk inovasi. Namun, berhati-hatilah agar tidak terlalu kritis atau memberontak tanpa tujuan yang jelas.",
+            'Direct Resource': "Ini adalah periode emas untuk belajar dan menyerap pengetahuan baru. Ikuti kursus, baca buku, atau cari mentor untuk memperdalam keahlian Anda.",
+            'Indirect Resource': "Percayai intuisi Anda. Jelajahi topik-topik unik atau spiritual yang menarik minat Anda. Pemahaman mendalam akan datang dari jalur yang tidak biasa.",
+            'Friend': "Kemandirian Anda sedang kuat. Fokus pada pengembangan diri dan tujuan pribadi. Bekerja samalah dengan orang yang setara dengan Anda.",
+            'Rob Wealth': "Gunakan karisma Anda untuk membangun jaringan dan memimpin. Ini adalah waktu yang baik untuk aktivitas sosial, namun waspadai potensi konflik atau pengeluaran berlebih karena teman."
+        },
+        INTERACTION_ALERTS: {
+            'CLASH': "Ada potensi guncangan atau perubahan mendadak di area yang terlibat. Bersikaplah fleksibel dan jangan membuat keputusan gegabah.",
+            'HARM': "Waspadai potensi kesalahpahaman atau pengkhianatan dari orang terdekat. Jaga komunikasi tetap jelas dan jangan mudah percaya.",
+            'PUNISHMENT': "Ada potensi stres, masalah hukum, atau sabotase diri. Jaga emosi tetap stabil dan hindari situasi konflik.",
+            'FAN_YIN': "Alarm tingkat tertinggi! Ini adalah tahun transformasi besar. Bersiaplah untuk melepaskan yang lama demi menyambut yang baru. Fokus pada ketahanan diri dan jangan melawan perubahan.",
+            'FU_YIN': "Anda mungkin merasa stagnan atau emosional. Ini bukan waktu untuk ekspansi besar, melainkan untuk introspeksi, perencanaan, dan mengurus hal-hal yang tertunda."
+        }
+    };
+    
+    // --- [BARU] VARIABEL UNTUK CHATBOT ---
+    let baziContextSummary = null;
+    
+    // --- FUNGSI UTAMA & EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', () => {
+
+        document.getElementById('unknownHourCheckbox').addEventListener('change', function() {
+            const isDisabled = this.checked;
+            const jamLangitInput = document.getElementById('jam-langit');
+            const jamBumiInput = document.getElementById('jam-bumi');
+            jamLangitInput.disabled = isDisabled;
+            jamBumiInput.disabled = isDisabled;
+            if (isDisabled) {
+                jamLangitInput.value = ''; jamBumiInput.value = '';
+                jamLangitInput.classList.remove('invalid-input');
+                jamBumiInput.classList.remove('invalid-input');
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('Yakin mau reset semua data? Analisis yang sudah ada akan hilang.')) {
+                resetFormAndResults();
+            }
+        });
+
+        // Back to Top functionality
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.add('show');
+            } else {
+                backToTopBtn.classList.remove('show');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('analyzeBtn').addEventListener('click', function() {
+            this.disabled = true;
+            this.querySelector('.analyze-text').classList.add('hidden');
+            this.querySelector('.loading-text').classList.remove('hidden');
+
+            // Use setTimeout to allow UI to update before heavy calculation
+            setTimeout(() => {
+                try {
+                    if (!validateAllInputs()) {
+                        const invalidInputs = document.querySelectorAll('.invalid-input');
+                        if (invalidInputs.length > 0) {
+                            invalidInputs[0].focus();
+                            invalidInputs[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        alert('❌ Input tidak valid! Periksa field yang ditandai merah.');
+                        return;
+                    }
+                    const gender = document.querySelector('input[name="gender"]:checked');
+                    const birthYearValue = document.getElementById('birth-year').value;
+                    if (!gender || !birthYearValue) {
+                        alert('Mohon pilih Gender dan masukkan Tahun Lahir (Masehi) untuk analisis lengkap!');
+                        return;
+                    }
+                    
+                    // Menampilkan semua kontainer hasil
+                    document.querySelectorAll('#life-aspects-dashboard, #strategy-solution-container, #summary-container, #advanced-analysis-container, #master-predictive-container, #bazi-chart-display, #dm-analysis-container, #ten-gods-container, #periodic-gods-container, #qi-flow-container, #stem-effectiveness-container, #internal-dynamics-container, #periodic-analysis-container, #natal-analysis-container, #tougan-rooted-container-wrapper, #ming-gua-analysis').forEach(el => el.classList.remove('hidden'));
+                    document.getElementById('transformation-analysis-container').classList.add('hidden'); // Sembunyikan default
+                    
+                    const isHourUnknown = document.getElementById('unknownHourCheckbox').checked;
+                    const pillars = {
+                        year: { name: "Tahun", stem: capitalizeFirstLetter(document.getElementById('tahun-langit').value.trim()), branch: capitalizeFirstLetter(document.getElementById('tahun-bumi').value.trim()) },
+                        month: { name: "Bulan", stem: capitalizeFirstLetter(document.getElementById('bulan-langit').value.trim()), branch: capitalizeFirstLetter(document.getElementById('bulan-bumi').value.trim()) },
+                        day: { name: "Hari", stem: capitalizeFirstLetter(document.getElementById('hari-langit').value.trim()), branch: capitalizeFirstLetter(document.getElementById('hari-bumi').value.trim()) },
+                        hour: { name: "Jam", stem: isHourUnknown ? '' : capitalizeFirstLetter(document.getElementById('jam-langit').value.trim()), branch: isHourUnknown ? '' : capitalizeFirstLetter(document.getElementById('jam-bumi').value.trim()) },
+                        dayun: { name: "Dayun", stem: capitalizeFirstLetter(document.getElementById('dayun-langit').value.trim()), branch: capitalizeFirstLetter(document.getElementById('dayun-bumi').value.trim()) },
+                        liunian: { name: "Liunian", stem: capitalizeFirstLetter(document.getElementById('liunian-langit').value.trim()), branch: capitalizeFirstLetter(document.getElementById('liunian-bumi').value.trim()) },
+                        liuyue: { name: "Bulan Ini", stem: capitalizeFirstLetter(document.getElementById('liuyue-langit').value.trim()), branch: capitalizeFirstLetter(document.getElementById('liuyue-bumi').value.trim()) }
+                    };
+
+                    // --- Alur Analisis ---
+                    const natalElementScores = calculateEffectiveElementScores(pillars);
+                    const { natalInteractions, periodicInteractions, totalTemporalStrength } = analyzeAllInteractions(pillars);
+                    const dmAnalysis = analyzeDayMasterStrength(pillars, natalElementScores);
+                    const tenGodsAnalysis = analyzeTenGodsClassical(pillars, natalInteractions);
+                    const periodicGodsInfluence = analyzePeriodicGodsInfluence(pillars, dmAnalysis.usefulGods);
+                    const healthAnalysis = analyzeHealthPotential(natalElementScores, natalInteractions);
+                    const fanYinFuYinAnalysis = analyzeFanYinFuYin(pillars);
+
+                    const lifeAspectsAnalysis = analyzeLifeAspects(pillars, tenGodsAnalysis, periodicGodsInfluence.scores, healthAnalysis, gender.value, dmAnalysis, natalInteractions);
+                    displayLifeAspects(lifeAspectsAnalysis);
+                    
+                    const strategy = analyzeStrategyAndSolutions(pillars.day.stem, dmAnalysis, tenGodsAnalysis, natalInteractions, fanYinFuYinAnalysis, healthAnalysis);
+                    displayStrategyAndSolutions(strategy);
+
+                    displayChart(pillars);
+                    
+                    const chartStructure = analyzeChartStructure(pillars);
+                    displayDayMasterAnalysis(dmAnalysis, chartStructure);
+
+                    const kongWangAnalysis = analyzeKongWang(pillars);
+                    displayKongWang(kongWangAnalysis);
+
+                    displayElementPieChart(natalElementScores, 'element-pie-chart-container', pillars.month.branch);
+                    
+                    displayTenGodsAnalysis(tenGodsAnalysis, periodicGodsInfluence.scores);
+                    displayPeriodicGodsAnalysis(periodicGodsInfluence.summary);
+
+                    const personalitySummary = generatePersonalitySummary(tenGodsAnalysis);
+                    displayPersonalitySummary(personalitySummary);
+
+                    displayHealthPotential(healthAnalysis);
+                    const triggerAnalysis = analyzeEventTriggers(natalInteractions, pillars);
+                    displayEventTriggers(triggerAnalysis);
+
+                    displayFanYinFuYin(fanYinFuYinAnalysis);
+
+                    displayQiFlowVisualization(natalElementScores);
+
+                    const transformationResult = analyzeTransformations(pillars, natalElementScores);
+                    if (transformationResult.log.length > 0) {
+                        displayTransformationAnalysis(transformationResult, pillars.month.branch);
+                    }
+
+                    const internalDynamics = analyzeInternalPillarDynamics(pillars);
+                    displayInternalDynamics(internalDynamics);
+
+                    const stemEffectiveness = analyzeStemEffectiveness(pillars);
+                    displayStemEffectiveness(stemEffectiveness);
+                    
+                    displayResults(natalInteractions, 'natal-analysis-content');
+                    const { updatedPeriodicInteractions, updatedTotalStrength } = addPeriodicImpactToInteractions(periodicInteractions, totalTemporalStrength, pillars, dmAnalysis.usefulGods);
+                    displayPeriodicAnalysis(updatedPeriodicInteractions, updatedTotalStrength, dmAnalysis.percentage);
+                    
+                    const touganRootedResults = analyzeTouGanAndRooted(pillars);
+                    displayTouGanAndRooted(touganRootedResults);
+
+                    const yearOfBirth = parseInt(birthYearValue, 10);
+                    const guaNumber = calculateMingGua(yearOfBirth, gender.value);
+                    displayMingGua(guaNumber);
+                    
+                    // --- [BARU] Generate konteks untuk chatbot ---
+                    baziContextSummary = generateBaziContextSummary(dmAnalysis, tenGodsAnalysis, fanYinFuYinAnalysis, pillars);
+                    
+                    // Buka chatbot secara otomatis setelah analisis pertama
+                    document.getElementById('chatbot-container').classList.add('show');
+
+
+                } catch (error) {
+                    console.error("Terjadi kesalahan saat analisis:", error);
+                    alert("Maaf, terjadi kesalahan teknis saat melakukan analisis. Silakan coba lagi.");
+                } finally {
+                    this.disabled = false;
+                    this.querySelector('.analyze-text').classList.remove('hidden');
+                    this.querySelector('.loading-text').classList.add('hidden');
+                }
+            }, 100);
+        });
+        
+        // --- [BARU] EVENT LISTENERS UNTUK CHATBOT ---
+        const chatToggleButton = document.getElementById('chat-toggle-button');
+        const chatbotContainer = document.getElementById('chatbot-container');
+        const closeChatBtn = document.getElementById('close-chat-btn');
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send-btn');
+
+        chatToggleButton.addEventListener('click', () => {
+            chatbotContainer.classList.toggle('show');
+        });
+
+        closeChatBtn.addEventListener('click', () => {
+            chatbotContainer.classList.remove('show');
+        });
+
+        chatSendBtn.addEventListener('click', handleSendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+    });
+    
+    // --- FUNGSI TAMPILAN & ANALISIS (SEMUA FUNGSI LAMA ANDA) ---
+    // ... (Semua fungsi dari displayChart hingga analyzeStrategyAndSolutions) ...
+    function displayChart(pillars) {
+        const chartContentDiv = document.getElementById('chart-content');
+        chartContentDiv.innerHTML = '';
+        const fullChart = { ...pillars };
+        for (const key in pillars) {
+            if (pillars[key].stem || pillars[key].branch) {
+                chartContentDiv.appendChild(createPillarHTML(pillars[key], pillars.day.stem, pillars[key].name, fullChart));
+            }
+        }
+    }
+
+    function createPillarHTML(pillar, dayMasterStem, pillarName, fullChart) {
+        const pilarDiv = document.createElement('div');
+        pilarDiv.className = 'p-1 border rounded-lg flex flex-col justify-between w-44 flex-shrink-0';
+        const stem = pillar.stem || '-'; const branch = pillar.branch || '-';
+        const stemDetails = STEM_DETAILS[stem]; const branchDetails = BRANCH_DETAILS[branch];
+        let tenGod = (pillar.name === 'Hari') ? { abbr: 'DM', hanzi: '日主' } : (getTenGod(dayMasterStem, stem) || { abbr: '-', hanzi: '-' });
+        const lifeStage = (dayMasterStem && branch) ? getLifeStage(dayMasterStem, branch) : null;
+        const stemElementInfo = stemDetails ? `${stemDetails.element} ${stemDetails.polarity}` : '';
+        const branchElementInfo = branchDetails ? `${branchDetails.element} ${branchDetails.polarity}` : '';
+        const naYin = (stem && branch) ? (NA_YIN_MAP[`${stem} ${branch}`] || '') : '';
+
+        let hiddenStemsHTML = '<div class="mt-2 pt-2 border-t min-h-[6rem] flex flex-col justify-center">';
+        const hiddenStemsData = HIDDEN_STEMS[pillar.branch];
+        if (hiddenStemsData) {
+            let displayOrder = hiddenStemsData;
+            hiddenStemsHTML += '<div class="flex justify-around items-start">';
+            displayOrder.forEach(hs => {
+                const hiddenTenGod = (dayMasterStem && hs.stem) ? (getTenGod(dayMasterStem, hs.stem) || { abbr: '-', hanzi: '-' }) : null;
+                hiddenStemsHTML += `<div class="text-center text-xs ${hs.isMain ? 'font-bold' : ''}"><div class="text-gray-500">${hiddenTenGod ? hiddenTenGod.abbr : ''}</div><div class="text-lg">${STEM_DETAILS[hs.stem] ? STEM_DETAILS[hs.stem].hanzi : ''}</div><div>${hs.stem}</div><div class="text-gray-500">${hiddenTenGod ? hiddenTenGod.hanzi : ''}</div></div>`;
+            });
+            hiddenStemsHTML += '</div>';
+        } else { hiddenStemsHTML += '<div class="text-gray-400 text-sm flex items-center justify-center h-full">N/A</div>'; }
+        hiddenStemsHTML += '</div>';
+        
+        let shenShaHTML = '<div class="mt-2 pt-2 border-t text-left text-xs space-y-1 px-1 min-h-[8rem] overflow-y-auto">';
+        const allShenSha = analyzeShenShaForPillar(pillar, fullChart);
+        if (allShenSha.length > 0) {
+            allShenSha.forEach(sha => { shenShaHTML += `<div class="${sha.color}">${sha.name}</div>`; });
+        } else { shenShaHTML += `<div class="text-gray-300 italic">No Shen Sha</div>`; }
+        shenShaHTML += '</div>';
+
+        pilarDiv.innerHTML = `<div><div class="font-semibold text-gray-500 text-sm">${pillarName}</div><div class="relative bg-blue-100 text-blue-800 font-bold text-xl rounded-md p-2 mt-1">${stemDetails ? stemDetails.hanzi : '-'}<div class="absolute top-1 right-1 text-xs font-normal bg-white/50 rounded px-1">${tenGod.abbr}</div></div><div class="text-sm">${stem}</div><div class="text-xs text-gray-400">${stemElementInfo}</div><div class="relative bg-yellow-100 text-yellow-800 font-bold text-xl rounded-md p-2 mt-2">${branchDetails ? branchDetails.hanzi : '-'}<div class="absolute top-1 right-1 text-xs font-normal bg-white/50 rounded px-1">${lifeStage ? LIFE_STAGES_HANZI[lifeStage] : ''}</div></div><div class="text-sm">${branch}</div><div class="text-xs text-gray-400">${branchElementInfo}</div><div class="text-xs text-gray-400 mt-1">${lifeStage || ''}</div><div class="text-center text-xs text-purple-700 mt-2 font-semibold">${naYin}</div></div>${hiddenStemsHTML}${shenShaHTML}`;
+        return pilarDiv;
+    }
+
+    function analyzeAllInteractions(allPillars) {
+        let natalInteractions = [];
+        let periodicInteractions = { dayun: [], liunian: [], liuyue: [] };
+        let totalTemporalStrength = { shift: 0 };
+        
+        const natalPillars = { year: allPillars.year, month: allPillars.month, day: allPillars.day, hour: allPillars.hour };
+        const natalPillarKeys = Object.keys(natalPillars).filter(k => natalPillars[k] && (natalPillars[k].stem || natalPillars[k].branch));
+
+        for (let i = 0; i < natalPillarKeys.length; i++) {
+            for (let j = i + 1; j < natalPillarKeys.length; j++) {
+                const p1Key = natalPillarKeys[i];
+                const p2Key = natalPillarKeys[j];
+                findInteractions(natalPillars[p1Key], natalPillars[p2Key], natalInteractions, p1Key, p2Key);
+            }
+        }
+        const natalBranches = natalPillarKeys.map(k => natalPillars[k].branch).filter(Boolean);
+        natalInteractions.push(...checkThreeBranchCombos(natalBranches, INTERACTIONS.COMBINE_3_HARMONY, "Harmoni (San He)", "🌟", "✨"));
+        natalInteractions.push(...checkThreeBranchCombos(natalBranches, INTERACTIONS.COMBINE_3_DIRECTIONAL, "Arah Musim (San Hui)", "🧭", "🧭"));
+        
+        const branchCounts = countOccurrences(natalBranches);
+        INTERACTIONS.PUNISHMENT.SELF.forEach(branch => { if (branchCounts[branch] >= 2) natalInteractions.push({ type: 'PUNISHMENT_SELF', branches: [branch, branch], text: `⛓️ <b>Self Punishment (${branch})</b> - <i>${INTERACTION_CONTEXT.PUNISHMENT_SELF}</i>` }); });
+        const hasYin = natalBranches.includes('Yin'), hasSi = natalBranches.includes('Si'), hasShen = natalBranches.includes('Shen');
+        if (hasYin && hasSi && hasShen) natalInteractions.push({ type: 'PUNISHMENT_UNCIVILIZED', branches: ['Yin', 'Si', 'Shen'], text: `⚔️ <b>Uncivilized Punishment</b> - <i>${INTERACTION_CONTEXT.PUNISHMENT_UNCIVILIZED}</i>` });
+        else if (hasYin && hasSi) natalInteractions.push({ type: 'PUNISHMENT_BULLYING', branches: ['Yin', 'Si'], text: `⚔️ <b>Bullying Punishment</b> - <i>${INTERACTION_CONTEXT.PUNISHMENT_BULLYING}</i>` });
+        else if (hasSi && hasShen) natalInteractions.push({ type: 'PUNISHMENT_BULLYING', branches: ['Si', 'Shen'], text: `⚔️ <b>Bullying Punishment</b> - <i>${INTERACTION_CONTEXT.PUNISHMENT_BULLYING}</i>` });
+        else if (hasShen && hasYin) natalInteractions.push({ type: 'PUNISHMENT_BULLYING', branches: ['Shen', 'Yin'], text: `⚔️ <b>Bullying Punishment</b> - <i>${INTERACTION_CONTEXT.PUNISHMENT_BULLYING}</i>` });
+        
+        const { dayun, liunian, liuyue } = allPillars;
+        if (dayun.stem || dayun.branch) {
+            natalPillarKeys.forEach(key => {
+                findInteractions(dayun, natalPillars[key], periodicInteractions.dayun, 'dayun', key);
+            });
+        }
+        if (liunian.stem || liunian.branch) {
+            natalPillarKeys.forEach(key => {
+                findInteractions(liunian, natalPillars[key], periodicInteractions.liunian, 'liunian', key);
+            });
+            if (dayun.stem || dayun.branch) {
+                findInteractions(liunian, dayun, periodicInteractions.liunian, 'liunian', 'dayun');
+            }
+        }
+        if (liuyue.stem || liuyue.branch) {
+            natalPillarKeys.forEach(key => {
+                findInteractions(liuyue, natalPillars[key], periodicInteractions.liuyue, 'liuyue', key);
+            });
+            if (liunian.stem || liunian.branch) {
+                findInteractions(liuyue, liunian, periodicInteractions.liuyue, 'liuyue', 'liunian');
+            }
+        }
+        
+        return { natalInteractions, periodicInteractions, totalTemporalStrength };
+    }
+    
+    function findInteractions(p1, p2, resultArray, p1Key, p2Key) {
+        if (!p1 || !p2) return;
+        const p1Palace = LIFE_PALACES[p1Key] || p1.name;
+        const p2Palace = LIFE_PALACES[p2Key] || p2.name;
+        const p1Name = `<b>${p1.name} (${p1Palace})</b>`;
+        const p2Name = `<b>${p2.name} (${p2Palace})</b>`;
+
+        if (p1.branch && p2.branch) {
+            if (isInteraction(p1.branch, p2.branch, INTERACTIONS.CLASH)) resultArray.push({ type: 'CLASH', branches: [p1.branch, p2.branch], text: `💥 <b>Clash:</b> ${p1Name} (${p1.branch}) vs ${p2Name} (${p2.branch})` });
+            if (isInteraction(p1.branch, p2.branch, INTERACTIONS.COMBINE_6)) resultArray.push({ type: 'COMBINE_6', branches: [p1.branch, p2.branch], text: `🤝 <b>Kombinasi 6:</b> ${p1Name} (${p1.branch}) & ${p2Name} (${p2.branch})` });
+            if (isInteraction(p1.branch, p2.branch, INTERACTIONS.HARM)) resultArray.push({ type: 'HARM', branches: [p1.branch, p2.branch], text: `💔 <b>Harm:</b> ${p1Name} (${p1.branch}) vs ${p2Name} (${p2.branch})` });
+            if (isInteraction(p1.branch, p2.branch, INTERACTIONS.DESTRUCTION)) resultArray.push({ type: 'DESTRUCTION', branches: [p1.branch, p2.branch], text: `💣 <b>Destruction:</b> ${p1Name} (${p1.branch}) vs ${p2Name} (${p2.branch})` });
+            if (isInteraction(p1.branch, p2.branch, INTERACTIONS.PUNISHMENT.UNGRATEFUL)) resultArray.push({ type: 'PUNISHMENT_UNGRATEFUL', branches: [p1.branch, p2.branch], text: `😠 <b>Ungrateful Punishment:</b> ${p1Name} (${p1.branch}) vs ${p2Name} (${p2.branch})` });
+        }
+        if (p1.stem && p2.stem && isInteraction(p1.stem, p2.stem, STEM_COMBINE)) resultArray.push({ type: 'STEM_COMBINE', stems: [p1.stem, p2.stem], text: `💞 <b>Kombinasi Batang Langit:</b> ${p1Name} (${p1.stem}) & ${p2Name} (${p2.stem})` });
+    }
+
+    function addPeriodicImpactToInteractions(periodicInteractions, totalTemporalStrength, allPillars, usefulGods) {
+        let updatedPeriodicInteractions = { dayun: [...periodicInteractions.dayun], liunian: [...periodicInteractions.liunian], liuyue: [...periodicInteractions.liuyue] };
+        let updatedTotalStrength = { ...totalTemporalStrength };
+
+        if (allPillars.dayun.stem || allPillars.dayun.branch) {
+            const dayunImpact = analyzePeriodicPillarImpact(allPillars.dayun, allPillars, usefulGods, "Dayun");
+            updatedPeriodicInteractions.dayun.unshift(...dayunImpact.results.map(text => ({ text })));
+            updatedTotalStrength.shift += dayunImpact.shift;
+        }
+        if (allPillars.liunian.stem || allPillars.liunian.branch) {
+            const liunianImpact = analyzePeriodicPillarImpact(allPillars.liunian, allPillars, usefulGods, "Liunian");
+            updatedPeriodicInteractions.liunian.unshift(...liunianImpact.results.map(text => ({ text })));
+            updatedTotalStrength.shift += liunianImpact.shift;
+        }
+        if (allPillars.liuyue.stem || allPillars.liuyue.branch) {
+            const liuyueImpact = analyzePeriodicPillarImpact(allPillars.liuyue, allPillars, usefulGods, "Bulan Ini");
+            updatedPeriodicInteractions.liuyue.unshift(...liuyueImpact.results.map(text => ({ text })));
+            updatedTotalStrength.shift += liuyueImpact.shift;
+        }
+        return { updatedPeriodicInteractions, updatedTotalStrength };
+    }
+
+    function analyzePeriodicPillarImpact(periodicPillar, allPillars, usefulGods, periodName) {
+        const results = [];
+        const { stem, branch } = periodicPillar;
+        let summary = [];
+        let shiftMultiplier = 1;
+        if (periodName === "Bulan Ini") shiftMultiplier = 0.5;
+
+        if (stem && STEM_DETAILS[stem]) {
+            const stemElement = STEM_DETAILS[stem].element;
+            if (usefulGods.favorable.includes(stemElement)) {
+                summary.push(`Batang Langit <b>${stem} (${stemElement})</b> <span class="text-green-600 font-semibold">menguntungkan</span>`);
+            } else if (usefulGods.unfavorable.includes(stemElement)) {
+                summary.push(`Batang Langit <b>${stem} (${stemElement})</b> <span class="text-red-600 font-semibold">merugikan</span>`);
+            }
+        }
+        if (branch && BRANCH_DETAILS[branch]) {
+            const branchElement = BRANCH_DETAILS[branch].element;
+             if (usefulGods.favorable.includes(branchElement)) {
+                summary.push(`Cabang Bumi <b>${branch} (${branchElement})</b> <span class="text-green-600 font-semibold">menguntungkan</span>`);
+            } else if (usefulGods.unfavorable.includes(branchElement)) {
+                summary.push(`Cabang Bumi <b>${branch} (${branchElement})</b> <span class="text-red-600 font-semibold">merugikan</span>`);
+            }
+        }
+        if (summary.length > 0) {
+            results.push(`✨ <b>Dampak Elemen:</b> Periode ini membawa ${summary.join(' dan ')}.`);
+        }
+
+        const temporalStrength = calculateTemporalStrength(periodicPillar, allPillars, usefulGods);
+        const shift = temporalStrength.shift * shiftMultiplier;
+        const shiftText = shift >= 0 ? `+${shift.toFixed(1)}` : `${shift.toFixed(1)}`;
+        const shiftColor = shift >= 0 ? 'text-green-600' : 'text-red-600';
+        
+        results.push(`📊 <b>Pergeseran Kekuatan ${periodName}:</b> Pengaruh periode ini memberikan pergeseran sekitar <span class="${shiftColor} font-bold">${shiftText} poin</span>.`);
+        if(temporalStrength.touGanLog.length > 0) {
+            results.push(`🌿 <b>Potensi Terwujud (Tou Gan):</b> ${temporalStrength.touGanLog.join(', ')}`);
+        }
+        
+        return { results, shift };
+    }
+
+    function calculateTemporalStrength(periodicPillar, allPillars, usefulGods) {
+        let shift = 0;
+        let touGanLog = [];
+        const { stem, branch } = periodicPillar;
+        const natalPillars = { year: allPillars.year, month: allPillars.month, day: allPillars.day, hour: allPillars.hour };
+        const natalStems = Object.values(natalPillars).map(p => p.stem).filter(Boolean);
+
+        if (stem && STEM_DETAILS[stem]) {
+            const stemElement = STEM_DETAILS[stem].element;
+            if (usefulGods.favorable.includes(stemElement)) shift += 5; else shift -= 4;
+        }
+        if (branch && BRANCH_DETAILS[branch]) {
+            const branchElement = BRANCH_DETAILS[branch].element;
+            if (usefulGods.favorable.includes(branchElement)) shift += 6; else shift -= 5;
+        }
+
+        if (branch && HIDDEN_STEMS[branch]) {
+            HIDDEN_STEMS[branch].forEach(hs => {
+                if (natalStems.includes(hs.stem)) {
+                    const hsElement = STEM_DETAILS[hs.stem].element;
+                    const touGanBonus = hs.isMain ? 10 : 5;
+                    if (usefulGods.favorable.includes(hsElement)) {
+                        shift += touGanBonus;
+                        touGanLog.push(`Elemen baik <b>${hs.stem}</b> dari ${periodicPillar.name} terwujud`);
+                    } else {
+                        shift -= touGanBonus;
+                        touGanLog.push(`Elemen buruk <b>${hs.stem}</b> dari ${periodicPillar.name} terwujud`);
+                    }
+                }
+            });
+        }
+        if (stem) {
+            for (const key in natalPillars) {
+                const p = natalPillars[key];
+                if (p.branch && HIDDEN_STEMS[p.branch]) {
+                    HIDDEN_STEMS[p.branch].forEach(hs => {
+                        if (hs.stem === stem) {
+                            const hsElement = STEM_DETAILS[hs.stem].element;
+                            const touGanBonus = hs.isMain ? 10 : 5;
+                             if (usefulGods.favorable.includes(hsElement)) {
+                                shift += touGanBonus;
+                                touGanLog.push(`Elemen baik <b>${hs.stem}</b> dari pilar ${p.name} terwujud di ${periodicPillar.name}`);
+                            } else {
+                                shift -= touGanBonus;
+                                touGanLog.push(`Elemen buruk <b>${hs.stem}</b> dari pilar ${p.name} terwujud di ${periodicPillar.name}`);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        return { shift: Math.round(shift), touGanLog: [...new Set(touGanLog)] };
+    }
+
+    function analyzeDayMasterStrength(pillars, effectiveScores) {
+        const dmStem = pillars.day.stem;
+        const monthBranch = pillars.month.branch;
+        if (!dmStem || !monthBranch) return { strengthCategory: 'Tidak dapat dihitung', percentage: 0, usefulGods: { favorable: [], unfavorable: [] }, specialStructure: null };
+
+        const dmElement = STEM_DETAILS[dmStem].element;
+        const dmRelations = FIVE_ELEMENT_RELATIONSHIP[dmElement];
+        
+        const totalScore = Object.values(effectiveScores).reduce((sum, val) => sum + val, 0);
+
+        if (totalScore === 0) return { strengthCategory: 'Tidak dapat dihitung', percentage: 0, usefulGods: { favorable: [], unfavorable: [] }, specialStructure: null };
+        
+        const selfPartyElements = [dmElement, dmRelations.producedBy];
+        const opposingPartyElements = [dmRelations.produces, dmRelations.controls, dmRelations.controlledBy];
+        
+        const selfPartyScore = selfPartyElements.reduce((sum, el) => sum + (effectiveScores[el] || 0), 0);
+        const percentage = (selfPartyScore / totalScore) * 100;
+
+        let strengthCategory = 'Seimbang';
+        let specialStructure = null;
+        let favorable = [], unfavorable = [];
+
+        if (percentage >= 75) {
+            strengthCategory = 'Sangat Kuat';
+            if (percentage >= 90) {
+                strengthCategory = "Dominan (Vibrating)";
+                specialStructure = { name: "Bagan Vibrating (专旺格)", type: "vibrating", description: "DM sangat kuat, aturan dibalik. Elemen Diri dan Sumber menjadi menguntungkan." };
+                favorable = [dmElement, dmRelations.producedBy, dmRelations.produces]; // Friend, Resource, Output
+                unfavorable = [dmRelations.controls, dmRelations.controlledBy]; // Wealth, Influence
+            }
+        } else if (percentage >= 51) {
+            strengthCategory = 'Cenderung Kuat';
+        } else if (percentage >= 49) {
+            strengthCategory = 'Seimbang';
+        } else if (percentage >= 25) {
+            strengthCategory = 'Cenderung Lemah';
+        } else { // percentage < 25
+            strengthCategory = 'Sangat Lemah';
+            if (percentage <= 10) {
+                strengthCategory = "Sangat Lemah (Follow)";
+                const opposingScores = opposingPartyElements.map(el => ({ element: el, score: effectiveScores[el] || 0 }));
+                const dominantOpposing = opposingScores.sort((a, b) => b.score - a.score)[0];
+                specialStructure = { name: `Bagan Follow (从格)`, type: "follow", description: `DM sangat lemah, harus mengikuti elemen terkuat yaitu ${dominantOpposing.element}.`};
+                favorable = [dominantOpposing.element, FIVE_ELEMENT_RELATIONSHIP[dominantOpposing.element].produces];
+                unfavorable = [dmElement, dmRelations.producedBy];
+            }
+        }
+
+        if (!specialStructure) {
+            if (percentage > 50) { // Strong
+                favorable = [dmRelations.controls, dmRelations.produces, dmRelations.controlledBy];
+                unfavorable = [dmRelations.producedBy, dmElement];
+            } else { // Weak
+                favorable = [dmRelations.producedBy, dmElement];
+                unfavorable = [dmRelations.controls, dmRelations.produces, dmRelations.controlledBy];
+            }
+        }
+        
+        return { 
+            strengthCategory, 
+            percentage: Math.round(percentage),
+            usefulGods: {
+                favorable: [...new Set(favorable)],
+                unfavorable: [...new Set(unfavorable)]
+            },
+            specialStructure
+        };
+    }
+    
+    function analyzeChartStructure(pillars) {
+        const dmStem = pillars.day.stem;
+        if (!dmStem) return "Tidak Terdefinisi";
+
+        const structureScores = { Output: 0, Wealth: 0, Influence: 0, Resource: 0, Friendship: 0 };
+
+        const getTenGodCategory = (tenGodName) => {
+            if (!tenGodName) return null;
+            if (['Eating God', 'Hurting Officer'].includes(tenGodName)) return 'Output';
+            if (['Direct Wealth', 'Indirect Wealth'].includes(tenGodName)) return 'Wealth';
+            if (['Direct Officer', '7 Killings'].includes(tenGodName)) return 'Influence';
+            if (['Direct Resource', 'Indirect Resource'].includes(tenGodName)) return 'Resource';
+            if (['Friend', 'Rob Wealth'].includes(tenGodName)) return 'Friendship';
+            return null;
+        };
+        
+        const natalPillars = [pillars.year, pillars.month, pillars.day, pillars.hour];
+        natalPillars.forEach((p, index) => {
+            if (p.stem && index !== 2) {
+                const tenGod = getTenGod(dmStem, p.stem);
+                const category = getTenGodCategory(tenGod?.name);
+                if (category) {
+                    structureScores[category] += (index === 1) ? 3 : 2;
+                }
+            }
+            if (p.branch) {
+                const hiddenStems = HIDDEN_STEMS[p.branch] || [];
+                hiddenStems.forEach(hs => {
+                    const tenGod = getTenGod(dmStem, hs.stem);
+                    const category = getTenGodCategory(tenGod?.name);
+                    if (category) {
+                        let weight = hs.isMain ? 1.5 : 0.5;
+                        if (index === 1) weight *= 2;
+                        structureScores[category] += weight;
+                    }
+                });
+            }
+        });
+
+        let dominantStructure = 'Tidak Terdefinisi';
+        let maxScore = 0;
+        for (const structure in structureScores) {
+            if (structureScores[structure] > maxScore) {
+                maxScore = structureScores[structure];
+                dominantStructure = CHART_STRUCTURES[structure];
+            }
+        }
+        return dominantStructure;
+    }
+
+    function displayDayMasterAnalysis(analysis, chartStructure) {
+        const contentDiv = document.getElementById('dm-strength-content');
+        const specialStructureDiv = document.getElementById('special-structure-content');
+        const { strengthCategory, percentage, usefulGods, specialStructure } = analysis;
+        
+        let strengthColorClass = 'bg-gray-400';
+        if (percentage > 50) strengthColorClass = 'bg-green-500';
+        if (percentage < 50) strengthColorClass = 'bg-red-500';
+        if (specialStructure) strengthColorClass = 'bg-purple-500';
+
+        let dmHtml = `
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-semibold">Kekuatan Elemen Diri (Natal):</span>
+                    <span class="font-bold text-lg">${percentage}% - ${strengthCategory}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="progress-bar-inner ${strengthColorClass} h-4 rounded-full" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+             <div class="p-3 bg-gray-100 rounded-lg mt-4">
+                <p class="text-lg">Struktur Bagan Umum: <span class="font-bold text-blue-700">${chartStructure}</span></p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-green-700">Elemen Menguntungkan (Yong Shen):</h4>
+                <p class="text-lg">${usefulGods.favorable.join(', ')}</p>
+                <p class="text-sm text-gray-500">Elemen-elemen ini membawa keseimbangan, peluang, dan dukungan.</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-red-700">Elemen Merugikan (Chou Shen):</h4>
+                <p class="text-lg">${usefulGods.unfavorable.join(', ')}</p>
+                <p class="text-sm text-gray-500">Elemen-elemen ini dapat membawa tantangan atau ketidakseimbangan.</p>
+            </div>
+        `;
+        contentDiv.innerHTML = dmHtml;
+
+        if (specialStructure) {
+            specialStructureDiv.innerHTML = `
+                <div class="p-4 bg-purple-100 border-l-4 border-purple-500 text-purple-800">
+                    <h3 class="font-bold text-lg">⚠️ Terdeteksi Struktur Bagan Khusus!</h3>
+                    <p class="font-semibold">${specialStructure.name}</p>
+                    <p class="text-sm mt-1"><i>${specialStructure.description} Aturan penentuan elemen baik/buruk telah disesuaikan.</i></p>
+                </div>
+            `;
+        } else {
+            specialStructureDiv.innerHTML = `
+                <div class="p-4 bg-green-100 border-l-4 border-green-500 text-green-800">
+                    <h3 class="font-bold text-lg">Struktur Bagan Normal</h3>
+                    <p class="text-sm mt-1"><i>Analisis menggunakan aturan keseimbangan standar (lemah dikuatkan, kuat dilemahkan).</i></p>
+                </div>
+            `;
+        }
+    }
+    
+    function calculateEffectiveElementScores(pillars) {
+        const effectiveScores = { 'Wood': 0, 'Fire': 0, 'Earth': 0, 'Metal': 0, 'Water': 0 };
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const natalBranches = Object.values(natalPillars).map(p => p.branch).filter(Boolean);
+        const monthBranch = pillars.month.branch;
+        const seasonElement = monthBranch ? BRANCH_DETAILS[monthBranch]?.element : null;
+
+        const allElements = [];
+        for (const key in natalPillars) {
+            const p = natalPillars[key];
+            if (p?.stem) allElements.push({ type: 'stem', value: p.stem, pillar: key });
+            if (p?.branch) {
+                (HIDDEN_STEMS[p.branch] || []).forEach(hs => 
+                    allElements.push({ type: 'hidden', value: hs.stem, isMain: hs.isMain, pillar: key })
+                );
+            }
+        }
+        
+        for (const el of allElements) {
+            const elDetails = STEM_DETAILS[el.value];
+            if(!elDetails) continue;
+            const elName = elDetails.element;
+            let score = 0;
+
+            if (el.type === 'stem') {
+                score = 1;
+            } else { 
+                score = el.isMain ? 1.5 : 0.5;
+            }
+
+            if (el.type === 'stem') {
+                let rootStrength = 0;
+                natalBranches.forEach(branch => {
+                    const hiddenStems = HIDDEN_STEMS[branch] || [];
+                    hiddenStems.forEach(hs => {
+                        if (STEM_DETAILS[hs.stem] && STEM_DETAILS[hs.stem].element === elName) {
+                            const pillarKey = Object.keys(natalPillars).find(k => natalPillars[k].branch === branch);
+                            let locationMultiplier = 1;
+                            if (pillarKey === 'month') locationMultiplier = 1.5;
+                            if (pillarKey === 'day') locationMultiplier = 1.2;
+                            rootStrength += (hs.isMain ? 1.2 : 0.5) * locationMultiplier;
+                        }
+                    });
+                });
+                score *= (1 + rootStrength);
+            }
+            
+            const seasonalStatus = getSeasonalStatus(elName, seasonElement);
+            switch (seasonalStatus) {
+                case 'Wang': score *= 1.5; break;
+                case 'Xiang': score *= 1.2; break;
+                case 'Xiu': score *= 1.0; break;
+                case 'Qiu': score *= 0.7; break;
+                case 'Si': score *= 0.5; break;
+            }
+
+            effectiveScores[elName] += score;
+        }
+
+        const interactionAdjustments = analyzeInteractionAdjustments(pillars);
+        for (const element in interactionAdjustments) {
+            effectiveScores[element] = Math.max(0, effectiveScores[element] + interactionAdjustments[element]);
+        }
+
+        // Ensure minimum scores to prevent division by zero
+        const totalScore = Object.values(effectiveScores).reduce((sum, val) => sum + val, 0);
+        if (totalScore < 1) {
+            // Default distribution if no elements detected
+            effectiveScores = { 'Wood': 1, 'Fire': 1, 'Earth': 1, 'Metal': 1, 'Water': 1 };
+        }
+
+        return effectiveScores;
+    }
+
+    function analyzeInteractionAdjustments(pillars) {
+        const adjustments = { 'Wood': 0, 'Fire': 0, 'Earth': 0, 'Metal': 0, 'Water': 0 };
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const natalBranches = Object.values(natalPillars).map(p => p.branch).filter(Boolean);
+        const usedBranches = [];
+
+        for (const [element, branches] of Object.entries(INTERACTIONS.COMBINE_3_DIRECTIONAL)) {
+            if (branches.every(b => natalBranches.includes(b)) && usedBranches.length === 0) {
+                adjustments[element] += 8;
+                branches.forEach(b => {
+                    const originalElement = BRANCH_DETAILS[b].element;
+                    if (originalElement !== element) adjustments[originalElement] -= 1.8;
+                    usedBranches.push(b);
+                });
+                break;
+            }
+        }
+
+        if (usedBranches.length === 0) {
+            for (const [element, branches] of Object.entries(INTERACTIONS.COMBINE_3_HARMONY)) {
+                if (branches.every(b => natalBranches.includes(b)) && usedBranches.length === 0) {
+                    adjustments[element] += 6;
+                    branches.forEach(b => {
+                        const originalElement = BRANCH_DETAILS[b].element;
+                        if (originalElement !== element) adjustments[originalElement] -= 1.2;
+                        usedBranches.push(b);
+                    });
+                    break;
+                }
+            }
+        }
+        
+        if (usedBranches.length === 0) {
+            for (const [element, branches] of Object.entries(INTERACTIONS.COMBINE_3_HARMONY)) {
+                const presentBranches = branches.filter(b => natalBranches.includes(b));
+                if (presentBranches.length === 2) {
+                    if (presentBranches.every(b => !usedBranches.includes(b))) {
+                        adjustments[element] += 3;
+                        presentBranches.forEach(b => {
+                            const originalElement = BRANCH_DETAILS[b].element;
+                            if (originalElement !== element) adjustments[originalElement] -= 0.8; 
+                            usedBranches.push(b);
+                        });
+                    }
+                }
+            }
+        }
+
+        const clashes = Object.entries(INTERACTIONS.CLASH);
+        for (let i = 0; i < natalBranches.length; i++) {
+            for (let j = i + 1; j < natalBranches.length; j++) {
+                const b1 = natalBranches[i];
+                const b2 = natalBranches[j];
+                if (isInteraction(b1, b2, INTERACTIONS.CLASH) && !usedBranches.includes(b1) && !usedBranches.includes(b2)) {
+                    adjustments[BRANCH_DETAILS[b1].element] -= 2;
+                    adjustments[BRANCH_DETAILS[b2].element] -= 2;
+                }
+            }
+        }
+
+        return adjustments;
+    }
+
+    function displayElementPieChart(scores, containerId, monthBranch) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        const totalScore = Object.values(scores).reduce((sum, val) => sum + val, 0);
+        if (totalScore <= 0) {
+            container.innerHTML = '<p class="text-center text-gray-400">Tidak ada data elemen yang signifikan.</p>';
+            return;
+        }
+
+        const seasonElement = monthBranch ? BRANCH_DETAILS[monthBranch].element : null;
+        const radius = 80;
+        const circumference = 2 * Math.PI * radius;
+        let accumulatedPercentage = 0;
+
+        let svgContent = `<svg viewBox="-100 -100 200 200" class="transform -rotate-90">`;
+        let legendContent = '<div class="w-full mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">';
+
+        for (const element in scores) {
+            if (scores[element] > 0) {
+                const percentage = (scores[element] / totalScore) * 100;
+                const strokeDashoffset = circumference * (1 - accumulatedPercentage / 100);
+                const strokeDasharray = `${(circumference * percentage / 100)} ${circumference}`;
+                
+                const status = getSeasonalStatus(element, seasonElement);
+                let opacityClass = 'opacity-100';
+                let ringClass = '';
+                switch (status) {
+                    case 'Wang': case 'Xiang':
+                        ringClass = 'filter drop-shadow-[0_0_3px_rgba(251,191,36,0.8)]';
+                        break;
+                    case 'Xiu':
+                        opacityClass = 'opacity-80';
+                        break;
+                    case 'Qiu': case 'Si':
+                        opacityClass = 'opacity-50 grayscale-[30%]';
+                        break;
+                }
+
+                svgContent += `<circle r="${radius}" cx="0" cy="0" fill="transparent" stroke="${ELEMENT_COLORS[element]}" stroke-width="30" stroke-dasharray="${strokeDasharray}" stroke-dashoffset="${-strokeDashoffset}" class="pie-chart-slice ${opacityClass} ${ringClass}" />`;
+                
+                legendContent += `<div class="flex items-center" title="Status Musim: ${status}"><span class="h-2 w-2 rounded-full mr-1.5" style="background-color:${ELEMENT_COLORS[element]}"></span>${element}: ${percentage.toFixed(1)}%</div>`;
+
+                accumulatedPercentage += percentage;
+            }
+        }
+        svgContent += `</svg>`;
+        legendContent += `</div>`;
+        container.innerHTML = svgContent + legendContent;
+    }
+
+    function getSeasonalStatus(element, seasonElement) {
+        if (!element || !seasonElement) return 'Netral';
+        const rel = FIVE_ELEMENT_RELATIONSHIP[seasonElement];
+        if (element === seasonElement) return 'Wang'; // Sejahtera
+        if (element === rel.produces) return 'Xiang'; // Berkembang
+        if (element === rel.producedBy) return 'Xiu'; // Istirahat
+        if (element === rel.controls) return 'Qiu'; // Terperangkap
+        if (element === rel.controlledBy) return 'Si'; // Mati
+        return 'Netral';
+    }
+
+    function analyzeTransformations(pillars, initialScores) {
+        const natalPillars = [pillars.year, pillars.month, pillars.day, pillars.hour];
+        const natalStems = natalPillars.map(p => p.stem).filter(Boolean);
+        const natalBranches = natalPillars.map(p => p.branch).filter(Boolean);
+        const monthBranch = pillars.month.branch;
+        const seasonElement = monthBranch ? BRANCH_DETAILS[monthBranch].element : null;
+
+        let transformedScores = JSON.parse(JSON.stringify(initialScores));
+        let log = [];
+        let usedBranches = [];
+
+        for (const [element, branches] of Object.entries(INTERACTIONS.COMBINE_3_DIRECTIONAL)) {
+            const [b1, b2, b3] = branches;
+            if (natalBranches.includes(b1) && natalBranches.includes(b2) && natalBranches.includes(b3)) {
+                if (seasonElement === element) {
+                    log.push({ success: true, text: `✅ **Transformasi Berhasil (San Hui):** Kombinasi Musim ${branches.join(', ')} membentuk Elemen **${element}** yang sangat kuat karena didukung musim.` });
+                    usedBranches.push(b1, b2, b3);
+                    transformedScores[element] += 10;
+                    branches.forEach(br => {
+                        const originalElement = BRANCH_DETAILS[br].element;
+                        if (originalElement !== element) transformedScores[originalElement] -= 2;
+                    });
+                    break;
+                } else {
+                    log.push({ success: false, text: `❌ **Transformasi Gagal (San Hui):** Potensi kombinasi musim ${branches.join(', ')} terdeteksi, namun tidak didukung oleh musim kelahiran (${seasonElement}).` });
+                }
+            }
+        }
+
+        if (usedBranches.length === 0) {
+            for (const [element, branches] of Object.entries(INTERACTIONS.COMBINE_3_HARMONY)) {
+                if (branches.every(b => natalBranches.includes(b)) && usedBranches.length === 0) {
+                    const hasLeadingStem = natalStems.some(s => STEM_DETAILS[s].element === element);
+                    const isSupportedBySeason = seasonElement === element || FIVE_ELEMENT_RELATIONSHIP[seasonElement].produces === element;
+                    
+                    if (hasLeadingStem && isSupportedBySeason) {
+                        log.push({ success: true, text: `✅ **Transformasi Berhasil (San He):** Kombinasi Harmoni ${branches.join(', ')} membentuk Elemen **${element}**. Didukung oleh Batang Langit dan Musim.` });
+                        transformedScores[element] += 8;
+                        branches.forEach(br => {
+                            const originalElement = BRANCH_DETAILS[br].element;
+                            if (originalElement !== element) transformedScores[originalElement] -= 1.5;
+                        });
+                        break; 
+                    } else {
+                        let reason = !hasLeadingStem ? "tidak ada Batang Langit pemimpin" : "tidak didukung musim";
+                        log.push({ success: false, text: `❌ **Transformasi Gagal (San He):** Potensi kombinasi harmoni ${branches.join(', ')} terdeteksi, namun gagal karena ${reason}.` });
+                    }
+                }
+            }
+        }
+        
+        return { scores: transformedScores, log };
+    }
+
+    function displayTransformationAnalysis(result, monthBranch) {
+        const container = document.getElementById('transformation-analysis-container');
+        const logContainer = document.getElementById('transformation-log-container');
+        
+        logContainer.innerHTML = '';
+        result.log.forEach(entry => {
+            const p = document.createElement('p');
+            p.className = `p-2 rounded-md text-sm ${entry.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            p.innerHTML = entry.text;
+            logContainer.appendChild(p);
+        });
+
+        if (result.log.length > 0) {
+            container.classList.remove('hidden');
+            if (result.log.some(e => e.success)) {
+                document.getElementById('dynamic-element-chart-container-wrapper').classList.remove('hidden');
+                displayElementPieChart(result.scores, 'dynamic-element-chart-container', monthBranch);
+            } else {
+                document.getElementById('dynamic-element-chart-container-wrapper').classList.add('hidden');
+            }
+        }
+    }
+
+    function displayPeriodicAnalysis(periodicResults, totalStrength, natalPercentage) {
+        const container = document.getElementById('periodic-analysis-content');
+        container.innerHTML = '';
+
+        const { dayun, liunian, liuyue } = periodicResults;
+
+        let html = '';
+        if (dayun.length > 0) {
+            html += `<div><h3 class="text-xl font-semibold text-indigo-700 border-b-2 border-indigo-200 pb-1 mb-2">Analisis Dayun</h3><ul class="list-disc list-inside space-y-2">`;
+            dayun.forEach(res => { html += `<li>${res.text}</li>`; });
+            html += `</ul></div>`;
+        }
+        
+        if (liunian.length > 0) {
+            html += `<div><h3 class="text-xl font-semibold text-indigo-700 border-b-2 border-indigo-200 pb-1 mb-2 mt-4">Analisis Liunian</h3><ul class="list-disc list-inside space-y-2">`;
+            liunian.forEach(res => { html += `<li>${res.text}</li>`; });
+            html += `</ul></div>`;
+        }
+
+        if (liuyue.length > 0) {
+            html += `<div><h3 class="text-xl font-semibold text-indigo-700 border-b-2 border-indigo-200 pb-1 mb-2 mt-4">Analisis Bulan Ini</h3><ul class="list-disc list-inside space-y-2">`;
+            liuyue.forEach(res => { html += `<li>${res.text}</li>`; });
+            html += `</ul></div>`;
+        }
+        
+        if (dayun.length > 0 || liunian.length > 0 || liuyue.length > 0) {
+            const finalPercentage = Math.round(Math.max(0, Math.min(100, natalPercentage + totalStrength.shift)));
+            
+            let finalCategory = 'Seimbang';
+            if (finalPercentage >= 70) finalCategory = 'Terasa Sangat Kuat';
+            else if (finalPercentage >= 51) finalCategory = 'Terasa Kuat';
+            else if (finalPercentage == 50) finalCategory = 'Seimbang';
+            else if (finalPercentage >= 31) finalCategory = 'Terasa Lemah';
+            else if (finalPercentage <= 30) finalCategory = 'Terasa Sangat Lemah';
+            
+            const finalColor = finalPercentage > 50 ? 'bg-green-500' : (finalPercentage < 50 ? 'bg-red-500' : 'bg-gray-400');
+
+            html += `<div class="mt-6 p-4 bg-indigo-100 rounded-lg">
+                        <h4 class="text-lg font-bold text-indigo-900">Kesimpulan Kekuatan Day Master Periode Ini</h4>
+                        <p class="text-sm text-indigo-700">Kekuatan Asli (${natalPercentage}%) + Pengaruh Total Periode (${totalStrength.shift >= 0 ? '+' : ''}${totalStrength.shift.toFixed(1)} poin)</p>
+                        <div class="flex justify-between items-center mt-2 mb-1">
+                            <span class="font-semibold">Kekuatan Sesaat:</span>
+                            <span class="font-bold text-xl">${finalPercentage}% - ${finalCategory}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-5">
+                            <div class="progress-bar-inner ${finalColor} h-5 rounded-full" style="width: ${finalPercentage}%"></div>
+                        </div>
+                     </div>`;
+        }
+
+
+        if (html === '') {
+            container.innerHTML = '<p class="italic text-gray-500">Tidak ada pilar periode yang diinput untuk dianalisis.</p>';
+        } else {
+            container.innerHTML = html;
+        }
+    }
+
+    function analyzeInternalPillarDynamics(pillars) {
+        const results = {};
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+
+        for (const pillarKey in natalPillars) {
+            const pillar = natalPillars[pillarKey];
+            if (!pillar.stem || !pillar.branch) continue;
+
+            const stem = pillar.stem;
+            const stemElement = STEM_DETAILS[stem].element;
+            const branch = pillar.branch;
+            const branchElement = BRANCH_DETAILS[branch].element;
+            const hiddenStems = HIDDEN_STEMS[branch] || [];
+            
+            let descriptions = [];
+
+            if (FIVE_ELEMENT_RELATIONSHIP[branchElement].produces === stemElement) {
+                descriptions.push('🌿 Batang Langit <b>didukung</b> oleh Cabang Bumi (Producing). Pilar harmonis.');
+            } else if (FIVE_ELEMENT_RELATIONSHIP[stemElement].controls === branchElement) {
+                descriptions.push('⚔️ Batang Langit <b>mengontrol</b> Cabang Bumi (Controlling). Menandakan penguasaan, tapi bisa jadi tidak stabil.');
+            } else if (FIVE_ELEMENT_RELATIONSHIP[branchElement].controls === stemElement) {
+                 descriptions.push('🔥 Batang Langit <b>dikontrol</b> oleh Cabang Bumi (Countering). Menandakan tekanan dari bawah/internal.');
+            }
+
+            hiddenStems.forEach(hs => {
+                const hsElement = STEM_DETAILS[hs.stem].element;
+                if (hsElement !== stemElement) {
+                    if (FIVE_ELEMENT_RELATIONSHIP[hsElement].controls === stemElement) {
+                        descriptions.push(`💥 Konflik tersembunyi dari <b>${hs.stem} (${hsElement})</b> yang melemahkan Batang Langit.`);
+                    } else if (FIVE_ELEMENT_RELATIONSHIP[stemElement].controls === hsElement) {
+                         descriptions.push(`🛡️ Potensi tersembunyi untuk mengontrol <b>${hs.stem} (${hsElement})</b>.`);
+                    }
+                }
+            });
+
+            if (descriptions.length > 0) {
+                results[pillar.name] = descriptions;
+            } else {
+                results[pillar.name] = ["Pilar ini memiliki hubungan yang relatif netral secara internal."];
+            }
+        }
+        return results;
+    }
+
+    function displayInternalDynamics(dynamics) {
+        const container = document.getElementById('internal-dynamics-content');
+        container.innerHTML = '';
+        let hasContent = false;
+        
+        for (const pillarName in dynamics) {
+            hasContent = true;
+            const descriptions = dynamics[pillarName];
+            let html = `<div class="p-3 bg-teal-100/50 rounded-lg"><h4 class="font-bold text-teal-900">${pillarName}</h4><ul class="mt-1 space-y-1 text-sm text-teal-800 list-disc list-inside">`;
+            descriptions.forEach(desc => {
+                html += `<li>${desc}</li>`;
+            });
+            html += `</ul></div>`;
+            container.innerHTML += html;
+        }
+        
+        if (!hasContent) {
+             container.innerHTML = '<p class="italic text-gray-500">Analisis dinamika internal tidak dapat dilakukan.</p>';
+        }
+    }
+
+    function analyzeStemEffectiveness(pillars) {
+        const results = {};
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const natalBranches = Object.values(natalPillars).map(p => p.branch).filter(Boolean);
+        const monthBranch = pillars.month.branch;
+        const seasonElement = monthBranch ? BRANCH_DETAILS[monthBranch].element : null;
+
+        for (const pillarKey in natalPillars) {
+            const pillar = natalPillars[pillarKey];
+            if (!pillar.stem) continue;
+
+            const stem = pillar.stem;
+            const stemElement = STEM_DETAILS[stem].element;
+            let rootScore = 0;
+            let rootLocations = [];
+
+            natalBranches.forEach(branch => {
+                const hiddenStems = HIDDEN_STEMS[branch] || [];
+                hiddenStems.forEach(hs => {
+                    if (STEM_DETAILS[hs.stem].element === stemElement) {
+                        rootScore += hs.isMain ? 40 : 15;
+                        rootLocations.push(branch);
+                    }
+                });
+            });
+
+            if (rootLocations.includes(monthBranch)) {
+                rootScore += 25;
+            }
+            
+            const percentage = Math.min(100, rootScore);
+            let category = 'Bacot Doang';
+            let color = 'bg-red-500';
+            let description = `Tidak memiliki akar yang signifikan di dalam bagan.`;
+
+            if (percentage >= 70) {
+                category = 'Jagoan Neon';
+                color = 'bg-green-500';
+                description = `Berakar sangat kuat di <b>${[...new Set(rootLocations)].join(', ')}</b>.`;
+            } else if (percentage >= 30) {
+                category = 'Punya Potensi';
+                color = 'bg-yellow-500';
+                description = `Memiliki akar di <b>${[...new Set(rootLocations)].join(', ')}</b>.`;
+            }
+
+            results[pillar.name] = {
+                stem: stem,
+                percentage: percentage,
+                category: category,
+                color: color,
+                description: description
+            };
+        }
+        return results;
+    }
+
+    function displayStemEffectiveness(effectivenessResults) {
+        const container = document.getElementById('stem-effectiveness-content');
+        container.innerHTML = '';
+        let hasContent = false;
+
+        for (const pillarName in effectivenessResults) {
+            hasContent = true;
+            const result = effectivenessResults[pillarName];
+            let html = `
+                <div class="p-3 bg-purple-100/50 rounded-lg">
+                    <h4 class="font-bold text-purple-900">${result.stem} di Pilar ${pillarName}</h4>
+                    <div class="flex justify-between items-center mt-2 mb-1">
+                        <span class="font-semibold text-sm">${result.category}</span>
+                        <span class="font-bold text-sm">${result.percentage}% Rooted</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="progress-bar-inner ${result.color} h-3 rounded-full" style="width: ${result.percentage}%"></div>
+                    </div>
+                    <p class="text-xs text-purple-800 mt-2"><i>${result.description}</i></p>
+                </div>
+            `;
+            container.innerHTML += html;
+        }
+
+        if (!hasContent) {
+            container.innerHTML = '<p class="italic text-gray-500">Analisis efektivitas batang langit tidak dapat dilakukan.</p>';
+        }
+    }
+
+    function analyzeShenShaForPillar(pillar, fullChart) {
+        const foundShenSha = [];
+        if (!fullChart.day.stem || !fullChart.day.branch || !fullChart.year.branch) { return []; }
+        if (pillar.stem === '' && pillar.branch === '') return [];
+        for (const shaName in SHEN_SHA_DATABASE) {
+            if (SHEN_SHA_DATABASE[shaName].rule(pillar, fullChart)) {
+                foundShenSha.push({ name: shaName, color: SHEN_SHA_DATABASE[shaName].color });
+            }
+        }
+        return foundShenSha;
+    }
+    function analyzeTouGanAndRooted(pillars) {
+        const natalResults = [], periodResults = [];
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const periodPillars = { dayun: pillars.dayun, liunian: pillars.liunian, liuyue: pillars.liuyue };
+        const natalPillarKeys = Object.keys(natalPillars).filter(k => natalPillars[k].stem || natalPillars[k].branch);
+        const periodPillarKeys = Object.keys(periodPillars).filter(k => periodPillars[k].stem || periodPillars[k].branch);
+        const natalHiddenStemsMap = {};
+        natalPillarKeys.forEach(key => {
+            const p = natalPillars[key];
+            const hidden = HIDDEN_STEMS[p.branch] || [];
+            hidden.forEach(hs => {
+                if (!natalHiddenStemsMap[hs.stem]) { natalHiddenStemsMap[hs.stem] = []; }
+                natalHiddenStemsMap[hs.stem].push(p.name);
+            });
+        });
+        natalPillarKeys.forEach(key => {
+            const p = natalPillars[key];
+            if (p.stem && natalHiddenStemsMap[p.stem]) {
+                const fromPillars = [...new Set(natalHiddenStemsMap[p.stem])].join(', ');
+                natalResults.push(`🌿 <b>Tou Gan:</b> Batang Langit Tersembunyi <b>${p.stem}</b> (dari pilar ${fromPillars}) terungkap di pilar ${p.name}.`);
+            }
+            const stemElement = STEM_DETAILS[p.stem]?.element;
+            if (!stemElement) return;
+            const rootLocations = [];
+            natalPillarKeys.forEach(branchKey => {
+                const branchPillar = natalPillars[branchKey];
+                if ((HIDDEN_STEMS[branchPillar.branch] || []).some(hs => STEM_DETAILS[hs.stem]?.element === stemElement)) {
+                    rootLocations.push(branchPillar.name);
+                }
+            });
+            if (rootLocations.length > 0) {
+                natalResults.push(`🌳 <b>Rooted:</b> Batang Langit <b>${p.stem} (${stemElement})</b> di pilar ${p.name} berakar di pilar ${[...new Set(rootLocations)].join(', ')}.`);
+            }
+        });
+        periodPillarKeys.forEach(key => {
+            const p = periodPillars[key];
+            if (p.stem && natalHiddenStemsMap[p.stem]) {
+                const fromPillars = [...new Set(natalHiddenStemsMap[p.stem])].join(', ');
+                periodResults.push(`🌿 <b>Tou Gan (Periode):</b> Hidden Stem <b>${p.stem}</b> dari pilar natal (${fromPillars}) terungkap di <b>${p.name}</b>.`);
+            }
+            const stemElement = STEM_DETAILS[p.stem]?.element;
+            if (!stemElement) return;
+            const rootLocations = [];
+            natalPillarKeys.forEach(branchKey => {
+                const branchPillar = natalPillars[branchKey];
+                if ((HIDDEN_STEMS[branchPillar.branch] || []).some(hs => STEM_DETAILS[hs.stem]?.element === stemElement)) {
+                    rootLocations.push(branchPillar.name);
+                }
+            });
+            if (rootLocations.length > 0) {
+                periodResults.push(`🌳 <b>Rooted (Periode):</b> Batang Langit <b>${p.stem} (${stemElement})</b> dari <b>${p.name}</b> berakar di pilar natal ${[...new Set(rootLocations)].join(', ')}.`);
+            }
+        });
+        return { natal: [...new Set(natalResults)], period: [...new Set(periodResults)] };
+    }
+    function displayResults(results, containerId) {
+        const contentDiv = document.getElementById(containerId);
+        contentDiv.innerHTML = ''; 
+        if (results.length === 0) { contentDiv.innerHTML = '<p class="italic text-gray-500">Tidak ada interaksi internal khusus yang ditemukan.</p>'; return; }
+        const ul = document.createElement('ul');
+        ul.className = 'list-disc list-inside space-y-3';
+        [...new Set(results)].forEach(res => { const li = document.createElement('li'); li.innerHTML = res.text; ul.appendChild(li); });
+        contentDiv.appendChild(ul);
+    }
+    function displayTouGanAndRooted(results) {
+        const container = document.getElementById('tougan-rooted-container');
+        container.innerHTML = '';
+        const createSectionHTML = (title, data) => {
+            if (data.length === 0) return '';
+            let html = `<div class="mb-4"><h3 class="text-lg font-semibold text-gray-800">${title}</h3>`;
+            html += '<ul class="list-disc list-inside space-y-2 mt-2">';
+            data.forEach(res => { html += `<li>${res}</li>`; });
+            html += '</ul></div>';
+            return html;
+        };
+        const natalHTML = createSectionHTML('Analisis Tou Gan & Rooted (Natal)', results.natal);
+        const periodHTML = createSectionHTML('Analisis Tou Gan & Rooted (Periode)', results.period);
+        if (natalHTML || periodHTML) {
+            container.innerHTML = natalHTML + periodHTML;
+        } else {
+            container.innerHTML = '<p class="italic text-gray-500">Tidak ada analisis Tou Gan atau Rooted yang ditemukan.</p>';
+        }
+    }
+    
+    function calculateMingGua(year, gender) {
+        const sumDigits = num => {
+            let s = num.toString();
+            while (s.length > 1) {
+                s = s.split('').reduce((acc, curr) => acc + parseInt(curr), 0).toString();
+            }
+            return parseInt(s);
+        };
+        let gua;
+        if (year < 2000) {
+            const lastTwoDigits = year % 100;
+            const singleDigit = sumDigits(lastTwoDigits);
+            if (gender === 'male') {
+                gua = 10 - singleDigit;
+            } else { // female
+                gua = 5 + singleDigit;
+            }
+        } else { // year >= 2000
+            const lastTwoDigits = year % 100;
+            const singleDigit = sumDigits(lastTwoDigits);
+            if (gender === 'male') {
+                gua = 9 - singleDigit;
+            } else { // female
+                gua = 6 + singleDigit;
+            }
+        }
+        gua = sumDigits(gua);
+        if (gua === 5) {
+            return (gender === 'male') ? 2 : 8;
+        }
+        return gua;
+    }
+
+    function displayMingGua(guaNumber) {
+        const contentDiv = document.getElementById('ming-gua-content');
+        const guaData = MING_GUA_DIRECTIONS[guaNumber];
+        if (!guaData) {
+            contentDiv.innerHTML = '<p class="text-red-500">Gagal menghitung data Ming Gua.</p>';
+            return;
+        }
+        const goodDirections = [], badDirections = [];
+        for (const dir in guaData.directions) {
+            const directionName = guaData.directions[dir];
+            const details = DIRECTION_DETAILS[directionName];
+            const item = { arah: dir, nama: details.name, deskripsi: details.desc };
+            if (details.type === 'good') { goodDirections.push(item); } 
+            else { badDirections.push(item); }
+        }
+        const createDirectionList = (title, items, colorClass) => {
+            let html = `<div class="mb-4"><h3 class="text-lg font-semibold ${colorClass}">${title}</h3><ul class="mt-2 space-y-1">`;
+            items.forEach(item => {
+                html += `<li class="border-b pb-1"><span class="font-bold w-10 inline-block">${item.arah}:</span> <span class="font-semibold">${item.nama}</span> - <span class="text-sm text-gray-600">${item.deskripsi}</span></li>`;
+            });
+            html += '</ul></div>';
+            return html;
+        };
+        let finalHTML = `
+            <div class="text-center mb-4 p-2 bg-gray-100 rounded-lg">
+                <span class="font-bold text-2xl">Angka GUA: ${guaNumber}</span>
+                <span class="text-xl text-gray-600 ml-4">(Grup ${guaData.group})</span>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                ${createDirectionList('4 Arah Baik (Auspicious)', goodDirections, 'text-green-600')}
+                ${createDirectionList('4 Arah Buruk (Inauspicious)', badDirections, 'text-red-600')}
+            </div>
+            <p class="text-xs text-gray-500 mt-4 italic">Gunakan arah baik untuk menentukan posisi meja kerja, kepala ranjang, atau pintu masuk utama untuk meningkatkan keberuntungan Anda.</p>
+        `;
+        contentDiv.innerHTML = finalHTML;
+    }
+    
+    function capitalizeFirstLetter(str) { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase(); }
+    function isInteraction(item1, item2, rule) { return (rule[item1] === item2) || (rule[item2] === item1); }
+    function countOccurrences(arr) { return arr.reduce((acc, curr) => { acc[curr] = (acc[curr] || 0) + 1; return acc; }, {}); }
+    function validateAllInputs() {
+        let allValid = true;
+        const inputs = document.querySelectorAll('.bazi-input');
+        const validate = (element, validValues) => {
+            if (element.disabled) return true;
+            const value = capitalizeFirstLetter(element.value.trim());
+            if (value === '' || validValues.includes(value)) {
+                element.classList.remove('invalid-input');
+                return true;
+            } else {
+                element.classList.add('invalid-input');
+                return false;
+            }
+        };
+        inputs.forEach(input => {
+            let isValid;
+            if (input.id.includes('-langit')) { isValid = validate(input, HEAVENLY_STEMS); } 
+            else { isValid = validate(input, EARTHLY_BRANCHES); }
+            if (!isValid) allValid = false;
+        });
+        return allValid;
+    }
+    function getTenGod(dayMasterStem, otherStem) { const dm = STEM_DETAILS[dayMasterStem]; const os = STEM_DETAILS[otherStem]; if (!dm || !os) return null; const rel = FIVE_ELEMENT_RELATIONSHIP[dm.element]; const polarity = dm.polarity === os.polarity ? 'same' : 'diff'; if (os.element === rel.produces) return TEN_GODS_MAP.produces[polarity]; if (os.element === rel.controls) return TEN_GODS_MAP.controls[polarity]; if (os.element === rel.producedBy) return TEN_GODS_MAP.producedBy[polarity]; if (os.element === rel.controlledBy) return TEN_GODS_MAP.controlledBy[polarity]; if (os.element === dm.element) return TEN_GODS_MAP.same[polarity]; return null; }
+    function getLifeStage(dayMasterStem, earthlyBranch) { const stemData = STEM_DETAILS[dayMasterStem]; if (!stemData || !earthlyBranch) return null; const lifeStageKey = Object.keys(LIFE_STAGES_MATRIX).find(k => k === dayMasterStem); if (!lifeStageKey) return null; const branchIndex = EARTHLY_BRANCHES.indexOf(earthlyBranch); if (branchIndex === -1) return null; return LIFE_STAGES_MATRIX[lifeStageKey][branchIndex]; }
+    function getBranchFrame(branch) { if (['Yin', 'Wu', 'Xu'].includes(branch)) return 'Fire'; if (['Shen', 'Zi', 'Chen'].includes(branch)) return 'Water'; if (['Si', 'You', 'Chou'].includes(branch)) return 'Metal'; if (['Hai', 'Mao', 'Wei'].includes(branch)) return 'Wood'; return null; }
+    function checkThreeBranchCombos(allBranches, ruleSet, comboName, fullEmoji, halfEmoji) { 
+        const findings = []; 
+        for (const element in ruleSet) { 
+            const requiredBranches = ruleSet[element]; 
+            const presentBranches = requiredBranches.filter(b => allBranches.includes(b)); 
+            const context = INTERACTION_CONTEXT[comboName.includes("Harmoni") ? "COMBINE_3_HARMONY" : "COMBINE_3_DIRECTIONAL"];
+            if (presentBranches.length === 3) findings.push({ type: `COMBINE_3_HARMONY_${element.toUpperCase()}`, branches: presentBranches, text: `${fullEmoji} <b>Tiga Kombinasi ${comboName}:</b> ${presentBranches.join(', ')} -> <b>${element}</b>. - <i>${context}</i>` }); 
+            else if (presentBranches.length === 2) findings.push({ type: `HALF_COMBINE_3_HARMONY_${element.toUpperCase()}`, branches: presentBranches, text: `${halfEmoji} <b>Setengah Kombinasi ${comboName}:</b> ${presentBranches.join(', ')} -> <b>${element}</b>. - <i>${context}</i>` }); 
+        } 
+        return findings; 
+    }
+    function getDeathEmptiness(dayStem, dayBranch) { const stemIndex = HEAVENLY_STEMS.indexOf(dayStem); const branchIndex = EARTHLY_BRANCHES.indexOf(dayBranch); if (stemIndex === -1 || branchIndex === -1) return ['N/A', 'N/A']; const firstBranchInCycleIndex = (branchIndex - stemIndex + 12) % 12; const de1_index = (firstBranchInCycleIndex + 10) % 12; const de2_index = (firstBranchInCycleIndex + 11) % 12; return [EARTHLY_BRANCHES[de1_index], EARTHLY_BRANCHES[de2_index]]; }
+    
+    function analyzeTenGodsClassical(pillars, natalInteractions) {
+        const dmStem = pillars.day.stem;
+        if (!dmStem || !pillars.month.branch) return [];
+
+        let godProfiles = {};
+        Object.values(TEN_GODS_MAP).flatMap(v => Object.values(v)).forEach(g => {
+            godProfiles[g.name] = { score: 0, reasons: new Set(), isRooted: false, isTouGan: false, rankingTier: 99 };
+        });
+        
+        const affectedBranches = new Map();
+        natalInteractions.forEach(interaction => {
+            if (interaction.type === 'CLASH' || interaction.type === 'COMBINE_6') {
+                const modifier = interaction.type === 'CLASH' ? 0.6 : 0.75; 
+                interaction.branches.forEach(b => {
+                    if (!affectedBranches.has(b) || (affectedBranches.has(b) && modifier < affectedBranches.get(b).modifier)) {
+                         affectedBranches.set(b, { modifier });
+                    }
+                });
+            }
+        });
+
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const natalStems = Object.values(natalPillars).map(p => p.stem).filter(Boolean);
+        const natalBranches = Object.values(natalPillars).map(p => p.branch).filter(Boolean);
+        const monthBranch = pillars.month.branch;
+        const monthHiddenStems = HIDDEN_STEMS[monthBranch] || [];
+        
+        const revealedStems = new Set(natalStems);
+        const rootMap = {}; 
+        natalBranches.forEach(b => {
+            (HIDDEN_STEMS[b] || []).forEach(hs => {
+                const el = STEM_DETAILS[hs.stem]?.element;
+                if (el) {
+                    if (!rootMap[el]) rootMap[el] = new Set();
+                    rootMap[el].add(BRANCH_DETAILS[b].animal);
+                }
+            });
+        });
+
+        let chartStructureGod = null;
+        const monthMainQi = monthHiddenStems.find(hs => hs.isMain)?.stem;
+        const monthMainQiGod = monthMainQi ? getTenGod(dmStem, monthMainQi) : null;
+
+        if (monthMainQi && revealedStems.has(monthMainQi)) {
+            chartStructureGod = monthMainQiGod.name;
+        } else {
+            const revealedMonthQi = monthHiddenStems.find(hs => revealedStems.has(hs.stem));
+            if (revealedMonthQi) {
+                chartStructureGod = getTenGod(dmStem, revealedMonthQi.stem).name;
+            }
+        }
+        if (!chartStructureGod && monthMainQiGod) {
+            chartStructureGod = monthMainQiGod.name;
+        }
+        
+        const allGodInstances = [];
+        for (const pKey in natalPillars) {
+            const p = natalPillars[pKey];
+            if (p.stem && pKey !== 'day') {
+                allGodInstances.push({ stem: p.stem, source: 'stem', pillar: pKey, branch: p.branch });
+            }
+            if (p.branch) {
+                (HIDDEN_STEMS[p.branch] || []).forEach(hs => {
+                    allGodInstances.push({ stem: hs.stem, source: 'hidden', pillar: pKey, isMain: hs.isMain, qiType: hs.qiType, branch: p.branch });
+                });
+            }
+        }
+
+        allGodInstances.forEach(instance => {
+            const god = getTenGod(dmStem, instance.stem);
+            if (!god) return;
+
+            let currentScore = 0;
+            const godName = god.name;
+            const stemElement = STEM_DETAILS[instance.stem].element;
+            
+            const isInstanceRooted = rootMap[stemElement] && rootMap[stemElement].size > 0;
+            if (isInstanceRooted) godProfiles[godName].isRooted = true;
+            if (revealedStems.has(instance.stem)) godProfiles[godName].isTouGan = true;
+
+            if (instance.source === 'stem') {
+                currentScore += 20;
+                if (isInstanceRooted) {
+                    currentScore += 30;
+                    godProfiles[godName].reasons.add(`🌳 Berakar di ${[...rootMap[stemElement]].join(', ')}`);
+                }
+            } else { 
+                currentScore += instance.isMain ? 10 : 5;
+                
+                if (instance.pillar === 'month') {
+                    let monthBonus = 0;
+                    let reasonText = '';
+                    switch(instance.qiType) {
+                        case 'Main': monthBonus = 40; reasonText = `🌙 Pengaruh Musim (Qi Utama)`; break;
+                        case 'Secondary': monthBonus = 30; reasonText = `🌙 Pengaruh Musim (Qi Sekunder)`; break;
+                        case 'Remaining': monthBonus = 15; reasonText = `🌙 Pengaruh Musim (Qi Sisa)`; break;
+                    }
+                    currentScore += monthBonus;
+                    if(reasonText) godProfiles[godName].reasons.add(reasonText);
+                }
+                
+                if (instance.pillar === 'day' && revealedStems.has(instance.stem)) {
+                    currentScore += 20; 
+                    godProfiles[godName].reasons.add(`🏠 Akar Hari Terungkap (Inner Self)`);
+                }
+
+                if (revealedStems.has(instance.stem) && instance.pillar !== 'day') { 
+                    godProfiles[godName].reasons.add(`🌿 Terungkap dari pilar ${natalPillars[instance.pillar].name}`);
+                }
+            }
+            
+            if (affectedBranches.has(instance.branch)) {
+                const { modifier } = affectedBranches.get(instance.branch);
+                currentScore *= modifier;
+                if (![...godProfiles[godName].reasons].some(r => r.includes('interaksi'))) {
+                    godProfiles[godName].reasons.add(`⚠️ Kekuatan terpengaruh interaksi pilar`);
+                }
+            }
+
+            godProfiles[godName].score += currentScore;
+        });
+
+        for(const name in godProfiles){
+            const profile = godProfiles[name];
+            if (name === chartStructureGod) {
+                profile.rankingTier = 1;
+                profile.reasons.add(`🌟 Struktur Bagan`);
+                profile.score += 100;
+            } else if (profile.isTouGan && profile.isRooted) {
+                profile.rankingTier = 2;
+            } else if (profile.isRooted) {
+                profile.rankingTier = 3;
+            } else if (profile.isTouGan) {
+                profile.rankingTier = 4;
+                profile.reasons.add(`☁️ Tidak Berakar (Pengaruh Lemah)`);
+            } else {
+                profile.rankingTier = 5;
+            }
+        }
+
+        const finalGods = Object.entries(godProfiles)
+            .map(([name, data]) => ({ name, ...data }))
+            .filter(god => god.score > 0.01);
+            
+        finalGods.sort((a, b) => {
+            if (a.rankingTier !== b.rankingTier) {
+                return a.rankingTier - b.rankingTier;
+            }
+            return b.score - a.score;
+        });
+        
+        // Ensure we always return at least some gods, even if weak
+        if (finalGods.length === 0) {
+            const allGods = Object.entries(godProfiles)
+                .map(([name, data]) => ({ name, ...data }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 3);
+            return allGods;
+        }
+        
+        return finalGods;
+    }
+
+    function displayTenGodsAnalysis(tenGodsList, periodicInfluences) {
+        const container = document.getElementById('ten-gods-content');
+        container.innerHTML = '';
+
+        if (tenGodsList.length === 0) {
+            container.innerHTML = '<p class="italic text-gray-500">Tidak ada data 10 Dewa yang signifikan untuk dianalisis.</p>';
+            return;
+        }
+
+        const maxScore = tenGodsList.reduce((max, god) => {
+            const periodicScore = periodicInfluences[god.name] || 0;
+            const total = god.score + periodicScore;
+            return total > max ? total : max;
+        }, 0);
+
+        tenGodsList.forEach((god, index) => {
+            const periodicScore = periodicInfluences[god.name] || 0;
+            const natalScore = god.score;
+            const totalScore = natalScore + periodicScore;
+
+            const natalPercentage = maxScore > 0 ? (natalScore / maxScore) * 100 : 0;
+            const periodicPercentage = maxScore > 0 ? (Math.abs(periodicScore) / maxScore) * 100 : 0;
+            
+            const godDetails = Object.values(TEN_GODS_MAP).flatMap(v => Object.values(v)).find(g => g.name === god.name);
+            
+            const rankColor = god.rankingTier === 1 ? 'bg-yellow-500' : (index < 2 ? 'bg-gray-400' : 'bg-gray-300');
+            const rankTextColor = (god.rankingTier === 1 || index < 2) ? 'text-white' : 'text-gray-600';
+
+            let reasonsHTML = '<ul class="text-xs mt-2 space-y-1 text-amber-900/80 list-disc list-inside">';
+            [...god.reasons].forEach(reason => {
+                reasonsHTML += `<li>${reason}</li>`;
+            });
+            reasonsHTML += '</ul>';
+
+            let scoreText = `${natalScore.toFixed(1)}`;
+            if (periodicScore > 0) {
+                scoreText += ` <span class="text-green-600 font-semibold">(+${periodicScore.toFixed(1)})</span>`;
+            } else if (periodicScore < 0) {
+                scoreText += ` <span class="text-red-600 font-semibold">(${periodicScore.toFixed(1)})</span>`;
+            }
+
+            if (godDetails) {
+                let html = `
+                    <div class="p-3 bg-amber-100/60 rounded-lg border border-amber-200 flex flex-col h-full">
+                        <div class="flex justify-between items-start">
+                           <div>
+                                <h4 class="font-bold text-amber-900 text-lg">${god.name} (${godDetails.hanzi})</h4>
+                                <p class="text-sm text-gray-600">${scoreText} Poin (Tier ${god.rankingTier})</p>
+                           </div>
+                           <div class="god-rank-badge ${rankColor} ${rankTextColor}">${index + 1}</div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 mt-2 relative overflow-hidden">
+                            <div class="progress-bar-inner bg-amber-500 h-3 absolute top-0 left-0" style="width: ${natalPercentage}%" title="Kekuatan Natal"></div>
+                            ${ periodicScore > 0 ? `<div class="progress-bar-inner bg-green-500 h-3 absolute top-0" style="left:${natalPercentage}%; width: ${periodicPercentage}%" title="Penguatan Periode"></div>` : '' }
+                            ${ periodicScore < 0 ? `<div class="progress-bar-inner bg-red-500/70 h-3 absolute top-0 right-0" style="width: ${periodicPercentage}%" title="Pelemahan Periode"></div>` : '' }
+                        </div>
+                        <div class="mt-auto pt-2">
+                            ${god.reasons.size > 0 ? reasonsHTML : ''}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            }
+        });
+    }
+
+    function analyzePeriodicGodsInfluence(pillars, usefulGods) {
+        const dmStem = pillars.day.stem;
+        const { dayun, liunian, liuyue } = pillars;
+        let influenceScores = {};
+        let summaryText = [];
+
+        if (!dmStem || !usefulGods || !usefulGods.favorable) return { scores: {}, summary: [] };
+
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const natalStems = Object.values(natalPillars).map(p => p.stem).filter(Boolean);
+        const natalHiddenStems = Object.values(natalPillars).flatMap(p => HIDDEN_STEMS[p.branch] || []).map(hs => hs.stem);
+        
+        const processPeriod = (periodPillar, periodName) => {
+            if (!periodPillar.stem && !periodPillar.branch) return;
+            const periodMultiplier = periodName === "Bulan Ini" ? 0.5 : 1;
+
+            if (periodPillar.stem && STEM_DETAILS[periodPillar.stem]) {
+                const incomingGod = getTenGod(dmStem, periodPillar.stem);
+                if (incomingGod) {
+                    const godElement = STEM_DETAILS[periodPillar.stem].element;
+                    const modifier = usefulGods.favorable.includes(godElement) ? 1 : -1;
+                    influenceScores[incomingGod.name] = (influenceScores[incomingGod.name] || 0) + (30 * modifier * periodMultiplier);
+                    summaryText.push(`🎁 <b>${periodName} membawa:</b> Dewa <b>${incomingGod.name}</b> hadir, membawa pengaruh ${modifier > 0 ? 'baik' : 'buruk'}.`);
+                }
+            }
+
+            const activatedGods = new Set();
+            if (periodPillar.stem) {
+                natalHiddenStems.forEach(hiddenStem => {
+                    if (hiddenStem === periodPillar.stem) {
+                        const god = getTenGod(dmStem, hiddenStem);
+                        if (god) {
+                            const godElement = STEM_DETAILS[hiddenStem].element;
+                             const modifier = usefulGods.favorable.includes(godElement) ? 1 : -1;
+                            activatedGods.add(god.name);
+                            influenceScores[god.name] = (influenceScores[god.name] || 0) + (40 * modifier * periodMultiplier);
+                        }
+                    }
+                });
+            }
+            if (activatedGods.size > 0) {
+                summaryText.push(`💡 <b>${periodName} mengaktifkan:</b> Potensi tersembunyi <b>${[...activatedGods].join(', ')}</b> muncul ke permukaan.`);
+            }
+
+            const strengthenedGods = new Set();
+            if (periodPillar.branch) {
+                const periodHiddenStems = (HIDDEN_STEMS[periodPillar.branch] || []).map(hs => hs.stem);
+                natalStems.forEach(natalStem => {
+                    const natalElement = STEM_DETAILS[natalStem].element;
+                    const hasRoot = periodHiddenStems.some(phs => STEM_DETAILS[phs].element === natalElement);
+                    if (hasRoot) {
+                        const god = getTenGod(dmStem, natalStem);
+                        if (god) {
+                            const modifier = usefulGods.favorable.includes(natalElement) ? 1 : -1;
+                            strengthenedGods.add(god.name);
+                            influenceScores[god.name] = (influenceScores[god.name] || 0) + (35 * modifier * periodMultiplier);
+                        }
+                    }
+                });
+            }
+            if (strengthenedGods.size > 0) {
+                summaryText.push(`🌳 <b>${periodName} memperkuat:</b> Dewa <b>${[...strengthenedGods].join(', ')}</b> mendapatkan akar dan menjadi lebih berpengaruh.`);
+            }
+
+            const clashedGods = new Set();
+            if (periodPillar.branch) {
+                for (const pKey in natalPillars) {
+                    const natalPillar = natalPillars[pKey];
+                    if (natalPillar.branch && isInteraction(periodPillar.branch, natalPillar.branch, INTERACTIONS.CLASH)) {
+                        const godInStem = getTenGod(dmStem, natalPillar.stem);
+                        if(godInStem) {
+                            clashedGods.add(godInStem.name);
+                            influenceScores[godInStem.name] = (influenceScores[godInStem.name] || 0) - (20 * periodMultiplier);
+                        }
+                        (HIDDEN_STEMS[natalPillar.branch] || []).forEach(hs => {
+                            const godInHidden = getTenGod(dmStem, hs.stem);
+                            if(godInHidden) {
+                                clashedGods.add(godInHidden.name);
+                                influenceScores[godInHidden.name] = (influenceScores[godInHidden.name] || 0) - (20 * periodMultiplier);
+                            }
+                        });
+                    }
+                }
+            }
+            if (clashedGods.size > 0) {
+                 summaryText.push(`💥 <b>${periodName} mengganggu:</b> Pilar yang berbenturan menyebabkan ketidakstabilan pada Dewa <b>${[...clashedGods].join(', ')}</b>.`);
+            }
+        };
+
+        processPeriod(dayun, "Dayun");
+        processPeriod(liunian, "Liunian");
+        processPeriod(liuyue, "Bulan Ini");
+
+        return { scores: influenceScores, summary: [...new Set(summaryText)] };
+    }
+
+    function displayPeriodicGodsAnalysis(analysis) {
+        const container = document.getElementById('periodic-gods-content');
+        const wrapper = document.getElementById('periodic-gods-container');
+        
+        if (!analysis || analysis.length === 0) {
+            wrapper.classList.add('hidden');
+            return;
+        }
+
+        wrapper.classList.remove('hidden');
+        container.innerHTML = '';
+        
+        let html = '<ul class="list-none space-y-3">';
+        analysis.forEach(item => {
+            html += `<li class="p-3 bg-cyan-100/70 rounded-md text-cyan-900 text-sm">${item}</li>`;
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    function analyzeKongWang(pillars) {
+        const dayStem = pillars.day.stem;
+        const dayBranch = pillars.day.branch;
+        if (!dayStem || !dayBranch) return { deBranches: [], affectedPillars: [] };
+
+        const deBranches = getDeathEmptiness(dayStem, dayBranch);
+        const affectedPillars = [];
+        const natalPillars = { year: pillars.year, month: pillars.month, hour: pillars.hour };
+
+        for (const key in natalPillars) {
+            const p = natalPillars[key];
+            if (p.branch && deBranches.includes(p.branch)) {
+                affectedPillars.push({
+                    name: p.name,
+                    palace: LIFE_PALACES[key]
+                });
+            }
+        }
+        return { deBranches, affectedPillars };
+    }
+
+    function displayKongWang(analysis) {
+        const container = document.getElementById('kong-wang-content');
+        if (!analysis.deBranches || analysis.deBranches.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let html = `<div class="mt-4 p-4 bg-gray-100 rounded-lg">
+                        <h3 class="font-bold text-gray-800">Analisis Kehampaan (Kong Wang / DE)</h3>
+                        <p class="text-sm">Cabang Kehampaan Anda adalah <b>${analysis.deBranches.join(' & ')}</b>.</p>`;
+
+        if (analysis.affectedPillars.length > 0) {
+            html += `<ul class="mt-2 text-sm list-disc list-inside text-red-700">`;
+            analysis.affectedPillars.forEach(p => {
+                html += `<li>Pilar <b>${p.name}</b> (Istana ${p.palace}) terkena Kong Wang. Pengaruhnya mungkin terasa lebih lemah atau hampa.</li>`;
+            });
+            html += `</ul>`;
+        } else {
+            html += `<p class="mt-2 text-sm text-green-700">👍 Tidak ada pilar natal yang jatuh pada Cabang Kehampaan.</p>`;
+        }
+        html += `</div>`;
+        container.innerHTML = html;
+    }
+
+    function generatePersonalitySummary(tenGodsList) {
+        if (!tenGodsList || tenGodsList.length === 0) {
+            return "Analisis kepribadian tidak dapat dibuat karena data 10 Dewa tidak signifikan.";
+        }
+        
+        const topGods = tenGodsList.slice(0, 3);
+        if (topGods.length === 0) {
+            return "Tidak ada Dewa yang cukup menonjol untuk membentuk profil kepribadian yang jelas.";
+        }
+
+        let summary = `Berdasarkan peta 10 Dewa Anda, tema utama kepribadian Anda dibentuk oleh <b class="text-gray-900">${topGods.map(g => g.name).join(', ')}</b>. `;
+        
+        summary += `Dengan <b>${topGods[0].name}</b> sebagai pengaruh terkuat, Anda cenderung menjadi seorang yang ${TEN_GODS_PERSONALITY[topGods[0].name] || 'unik'}. `;
+
+        if (topGods.length > 1) {
+            summary += `Sifat ini didukung atau diwarnai oleh energi dari <b>${topGods[1].name}</b>, yang menambahkan kualitas seperti ${TEN_GODS_PERSONALITY[topGods[1].name] || 'khas'}. `;
+        }
+        if (topGods.length > 2) {
+             summary += `Kombinasi ini dilengkapi oleh <b>${topGods[2].name}</b>, yang membawa dimensi ${TEN_GODS_PERSONALITY[topGods[2].name] || 'spesial'} pada diri Anda.`;
+        }
+        
+        return summary;
+    }
+
+    function displayPersonalitySummary(summary) {
+        const container = document.getElementById('personality-summary-content');
+        container.innerHTML = `<p>${summary}</p>`;
+    }
+
+    function analyzeHealthPotential(scores, natalInteractions) {
+        let healthNotes = [];
+        const sortedElements = Object.entries(scores).sort(([, a], [, b]) => a - b);
+        
+        if (sortedElements.length > 0) {
+            const weakest = sortedElements[0];
+            const strongest = sortedElements[sortedElements.length - 1];
+
+            if (weakest[1] < (strongest[1] / 5) && weakest[1] < 5) {
+                const healthInfo = ELEMENT_HEALTH_MAP[weakest[0]];
+                healthNotes.push(`⚠️ <b>Elemen Terlemah: ${weakest[0]}</b>. Perlu perhatian pada area: ${healthInfo.system}. Potensi isu: ${healthInfo.issue}`);
+            }
+            if (strongest[1] > (Object.values(scores).reduce((a,b) => a+b, 0) / 2)) {
+                const healthInfo = ELEMENT_HEALTH_MAP[strongest[0]];
+                healthNotes.push(`🔥 <b>Elemen Terkuat: ${strongest[0]}</b>. Ketidakseimbangan dapat memicu masalah pada area: ${healthInfo.system} (misal: peradangan jika Api).`);
+            }
+        }
+
+        const clashes = natalInteractions.filter(i => i.type === 'CLASH');
+        clashes.forEach(clash => {
+            const [b1, b2] = clash.branches;
+            const el1 = BRANCH_DETAILS[b1]?.element;
+            const el2 = BRANCH_DETAILS[b2]?.element;
+            if ((el1 === 'Metal' && el2 === 'Wood') || (el1 === 'Wood' && el2 === 'Metal')) {
+                healthNotes.push(`💥 <b>Clash Logam-Kayu</b> terdeteksi. Waspadai potensi cedera anggota gerak, atau masalah terkait sistem saraf dan pernapasan.`);
+            }
+            if ((el1 === 'Fire' && el2 === 'Water') || (el1 === 'Water' && el2 === 'Fire')) {
+                healthNotes.push(`🌊 <b>Clash Api-Air</b> terdeteksi. Waspadai potensi masalah pada sistem sirkulasi (jantung) dan sistem urinasi (ginjal).`);
+            }
+        });
+
+        if (healthNotes.length === 0) {
+            healthNotes.push("👍 Secara umum, tidak ada indikator ketidakseimbangan elemen atau clash yang signifikan terkait kesehatan.");
+        }
+
+        return healthNotes;
+    }
+
+    function displayHealthPotential(analysis) {
+        const container = document.getElementById('health-analysis-content');
+        if (!analysis || analysis.length === 0) {
+            container.innerHTML = '<p class="italic text-gray-500">Analisis kesehatan tidak dapat dilakukan.</p>';
+            return;
+        }
+        let html = '<ul class="list-disc list-inside space-y-2">';
+        analysis.forEach(note => {
+            html += `<li>${note}</li>`;
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    function analyzeEventTriggers(natalInteractions, pillars) {
+        const { dayun, liunian, liuyue } = pillars;
+        let triggerNotes = [];
+
+        const periodPillars = { dayun, liunian, liuyue };
+        const periodBranches = Object.values(periodPillars).map(p => p.branch).filter(Boolean);
+
+        if (periodBranches.length === 0) {
+            triggerNotes.push("Tidak ada pilar periode untuk dianalisis sebagai pemicu.");
+            return triggerNotes;
+        }
+
+        natalInteractions.forEach(interaction => {
+            const interactionBranches = interaction.branches || [];
+            const triggeringPillar = Object.entries(periodPillars).find(([key, p]) => p.branch && interactionBranches.includes(p.branch));
+
+            if (triggeringPillar) {
+                const triggerSource = triggeringPillar[1].name;
+                triggerNotes.push(`🔔 <b>Potensi Aktif:</b> Interaksi Natal "<b>${interaction.type}</b>" (${interactionBranches.join(', ')}) kemungkinan terpicu oleh kedatangan <b>${triggerSource}</b>. Waspadai tema yang terkait dengan interaksi ini.`);
+            }
+        });
+
+        if (triggerNotes.length === 0) {
+            triggerNotes.push("👍 Periode saat ini tidak terlihat memicu secara langsung interaksi kuat yang ada di bagan natal Anda.");
+        }
+
+        return [...new Set(triggerNotes)];
+    }
+
+    function displayEventTriggers(analysis) {
+        const container = document.getElementById('trigger-analysis-content');
+        if (!analysis || analysis.length === 0) {
+            container.innerHTML = '<p class="italic text-gray-500">Analisis pemicu tidak dapat dilakukan.</p>';
+            return;
+        }
+        let html = '<ul class="list-disc list-inside space-y-2">';
+        analysis.forEach(note => {
+            html += `<li>${note}</li>`;
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    function analyzeFanYinFuYin(pillars) {
+        const results = [];
+        const natalPillars = { year: pillars.year, month: pillars.month, day: pillars.day, hour: pillars.hour };
+        const periodPillars = { dayun: pillars.dayun, liunian: pillars.liunian, liuyue: pillars.liuyue };
+
+        for (const periodKey in periodPillars) {
+            const periodPillar = periodPillars[periodKey];
+            if (!periodPillar.stem || !periodPillar.branch) continue;
+
+            for (const natalKey in natalPillars) {
+                const natalPillar = natalPillars[natalKey];
+                if (!natalPillar.stem || !natalPillar.branch) continue;
+                
+                if (periodPillar.stem === natalPillar.stem && periodPillar.branch === natalPillar.branch) {
+                    results.push({type: 'FU_YIN', text: `😭 <b>Fu Yin (Ratapan)</b> terdeteksi antara <b>${periodPillar.name}</b> dan pilar <b>${natalPillar.name}</b> (${LIFE_PALACES[natalKey]}). Ini menandakan potensi stagnasi, kesedihan, atau kejadian berulang yang signifikan terkait aspek kehidupan ini.`});
+                }
+
+                if (STEM_CLASH[periodPillar.stem] === natalPillar.stem && INTERACTIONS.CLASH[periodPillar.branch] === natalPillar.branch) {
+                    results.push({type: 'FAN_YIN', text: `💥 <b>Fan Yin (Guncangan)</b> terdeteksi antara <b>${periodPillar.name}</b> dan pilar <b>${natalPillar.name}</b> (${LIFE_PALACES[natalKey]}). Ini adalah sinyal kuat untuk perubahan besar, guncangan, atau kejadian mendadak. Kewaspadaan tinggi diperlukan.`});
+                }
+            }
+        }
+        return results;
+    }
+
+    function displayFanYinFuYin(analysis) {
+        const container = document.getElementById('fanyin-fuyin-content');
+        if (!analysis || analysis.length === 0) {
+            container.innerHTML = '<p class="italic text-red-700/80">👍 Tidak ada sinyal Fan Yin atau Fu Yin yang terdeteksi pada periode ini. Ini pertanda baik untuk stabilitas.</p>';
+            return;
+        }
+        let html = '<ul class="list-disc list-inside space-y-3">';
+        analysis.forEach(note => {
+            html += `<li class="text-red-900">${note.text}</li>`;
+        });
+        html += '</ul>';
+        container.innerHTML = html;
+    }
+
+    function displayQiFlowVisualization(scores) {
+        const container = document.getElementById('qi-flow-visualization');
+        container.innerHTML = '';
+        const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
+        if (totalScore === 0) return;
+
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.min(width, height) / 2.5;
+
+        const elements = [
+            { id: 'Wood', x: cx, y: cy - radius },
+            { id: 'Fire', x: cx + radius * Math.cos(Math.PI * -0.1), y: cy + radius * Math.sin(Math.PI * -0.1) },
+            { id: 'Earth', x: cx + radius * Math.cos(Math.PI * 0.3), y: cy + radius * Math.sin(Math.PI * 0.3) },
+            { id: 'Metal', x: cx - radius * Math.cos(Math.PI * 0.3), y: cy + radius * Math.sin(Math.PI * 0.3) },
+            { id: 'Water', x: cx - radius * Math.cos(Math.PI * -0.1), y: cy + radius * Math.sin(Math.PI * -0.1) }
+        ];
+
+        let svg = `<svg width="${width}" height="${height}" viewbox="0 0 ${width} ${height}">`;
+        
+        svg += `<defs>
+                  <marker id="arrow-prod" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#10B981" /></marker>
+                  <marker id="arrow-ctrl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#EF4444" /></marker>
+                </defs>`;
+        
+        const getElementPos = (id) => elements.find(e => e.id === id);
+
+        const producingCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water', 'Wood'];
+        for (let i = 0; i < 5; i++) {
+            const from = getElementPos(producingCycle[i]);
+            const to = getElementPos(producingCycle[i+1]);
+            const strength = (scores[from.id] / totalScore) * 15 + 1;
+            svg += `<path d="M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}" stroke="#10B981" stroke-width="${strength}" fill="none" class="qi-flow-arrow" marker-end="url(#arrow-prod)" />`;
+        }
+
+        const controllingCycle = ['Wood', 'Earth', 'Water', 'Fire', 'Metal', 'Wood'];
+        for (let i = 0; i < 5; i++) {
+            const from = getElementPos(controllingCycle[i]);
+            const to = getElementPos(controllingCycle[i+1]);
+            const strength = (scores[from.id] / totalScore) * 10 + 1;
+            svg += `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="#EF4444" stroke-width="${strength}" class="qi-flow-arrow" marker-end="url(#arrow-ctrl)" />`;
+        }
+
+        elements.forEach(el => {
+            const elScore = scores[el.id] || 0;
+            const elRadius = (elScore / totalScore) * 50 + 15;
+            svg += `<circle cx="${el.x}" cy="${el.y}" r="${elRadius}" fill="${ELEMENT_COLORS[el.id]}" stroke="white" stroke-width="2" />`;
+            svg += `<text x="${el.x}" y="${el.y}" font-family="Inter, sans-serif" font-size="12" fill="white" text-anchor="middle" dy=".3em" class="font-bold">${el.id}</text>`;
+        });
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+    }
+
+    function resetFormAndResults() {
+        document.querySelectorAll('#bazi-form input[type="text"], #bazi-form input[type="number"]').forEach(input => {
+            input.value = '';
+            input.classList.remove('invalid-input');
+        });
+        document.querySelectorAll('input[name="gender"]').forEach(radio => radio.checked = false);
+        document.getElementById('unknownHourCheckbox').checked = false;
+        document.getElementById('jam-langit').disabled = false;
+        document.getElementById('jam-bumi').disabled = false;
+        document.querySelectorAll('#life-aspects-dashboard, #strategy-solution-container, #summary-container, #advanced-analysis-container, #master-predictive-container, #bazi-chart-display, #dm-analysis-container, #ten-gods-container, #periodic-gods-container, #qi-flow-container, #stem-effectiveness-container, #internal-dynamics-container, #periodic-analysis-container, #natal-analysis-container, #tougan-rooted-container-wrapper, #ming-gua-analysis, #transformation-analysis-container').forEach(container => {
+            container.classList.add('hidden');
+        });
+        // Reset chatbot context
+        baziContextSummary = null;
+    }
+
+    // --- [FUNGSI DIPERBAIKI] ---
+    function analyzeLifeAspects(pillars, tenGods, periodicGodScores, healthAnalysis, gender, dmAnalysis, natalInteractions) {
+        // Helper untuk mengambil total skor dari daftar nama dewa
+        const getGodScore = (godNames) => {
+            return godNames.reduce((sum, name) => {
+                const god = tenGods.find(g => g.name === name);
+                return sum + (god ? god.score : 0);
+            }, 0);
+        };
+        
+        // Helper untuk mengambil skor dari pengaruh periode
+        const getPeriodicScore = (godNames) => {
+             return godNames.reduce((sum, name) => sum + (periodicGodScores[name] || 0), 0);
+        };
+
+        // Pengelompokan Dewa ke Aspek Kehidupan yang lebih logis dan relevan
+        const aspectMappings = {
+            'Harta & Karir': ['Direct Wealth', 'Indirect Wealth', 'Direct Officer', '7 Killings'],
+            'Ekspresi & Skill': ['Eating God', 'Hurting Officer'],
+            'Hubungan': gender === 'male' ? ['Direct Wealth', 'Indirect Wealth'] : ['Direct Officer', '7 Killings'],
+            'Dukungan & Jaringan': ['Direct Resource', 'Indirect Resource', 'Friend', 'Rob Wealth']
+        };
+
+        let finalAspects = {};
+        
+        // Hitung total skor untuk baseline yang konsisten
+        const totalNatalScore = tenGods.reduce((sum, god) => sum + god.score, 0) || 100;
+        const baselineScore = totalNatalScore / Object.keys(aspectMappings).length; // Rata-rata per aspek
+
+        for (const aspect in aspectMappings) {
+            let natalRaw = getGodScore(aspectMappings[aspect]);
+            
+            // Beri penalti pada aspek Hubungan jika ada clash di Istana Pasangan (Pilar Hari)
+            if (aspect === 'Hubungan' && natalInteractions.some(i => i.text.includes('Diri/Pasangan') && i.type === 'CLASH')) {
+                natalRaw *= 0.7; // Kurangi kekuatan sebesar 30%
+            }
+            
+            const periodicRaw = getPeriodicScore(aspectMappings[aspect]);
+            
+            // Kalkulasi dengan baseline yang lebih stabil
+            let natalPercent = 30; // Baseline minimum 30%
+            if (natalRaw > 0) {
+                natalPercent = Math.min(90, 30 + (natalRaw / baselineScore) * 40);
+            }
+            
+            // Modifier periode dengan dampak yang terukur
+            let periodicModifier = 0;
+            if (periodicRaw !== 0) {
+                periodicModifier = Math.max(-25, Math.min(25, (periodicRaw / baselineScore) * 20));
+            }
+
+            const annualPercent = Math.max(10, Math.min(100, natalPercent + periodicModifier));
+
+            finalAspects[aspect] = {
+                natal: Math.round(natalPercent),
+                annual: Math.round(annualPercent),
+                change: natalPercent > 0 ? Math.round(((annualPercent / natalPercent) - 1) * 100) : 0
+            };
+        }
+
+        // Kalkulasi Aspek Wellness (Kesehatan)
+        let natalWellness = 65; // Baseline 65%
+        
+        // Analisis kesehatan natal
+        const negativeHealthCount = healthAnalysis.filter(note => 
+            note.includes('⚠️') || note.includes('🔥') || note.includes('💥')
+        ).length;
+        
+        if (negativeHealthCount > 0) {
+            natalWellness -= Math.min(25, negativeHealthCount * 12);
+        }
+        
+        if (healthAnalysis.some(note => note.includes('👍'))) {
+            natalWellness += 20;
+        }
+        
+        // Kalkulasi modifier periode untuk wellness
+        let periodicWellnessModifier = 0;
+        const { usefulGods } = dmAnalysis;
+        
+        if (usefulGods && usefulGods.favorable && usefulGods.unfavorable) {
+            const periodPillars = [
+                { pillar: pillars.dayun, weight: 1.0, name: 'dayun' },
+                { pillar: pillars.liunian, weight: 1.0, name: 'liunian' },
+                { pillar: pillars.liuyue, weight: 0.5, name: 'liuyue' }
+            ];
+            
+            periodPillars.forEach(({ pillar, weight }) => {
+                if (!pillar || (!pillar.stem && !pillar.branch)) return;
+                
+                const stemElement = pillar.stem ? STEM_DETAILS[pillar.stem]?.element : null;
+                const branchElement = pillar.branch ? BRANCH_DETAILS[pillar.branch]?.element : null;
+                
+                if (stemElement) {
+                    if (usefulGods.favorable.includes(stemElement)) {
+                        periodicWellnessModifier += (12 * weight);
+                    } else if (usefulGods.unfavorable.includes(stemElement)) {
+                        periodicWellnessModifier -= (12 * weight);
+                    }
+                }
+                
+                if (branchElement) {
+                    if (usefulGods.favorable.includes(branchElement)) {
+                        periodicWellnessModifier += (15 * weight);
+                    } else if (usefulGods.unfavorable.includes(branchElement)) {
+                        periodicWellnessModifier -= (15 * weight);
+                    }
+                }
+            });
+        }
+        
+        const annualWellness = natalWellness + periodicWellnessModifier;
+        const finalNatalWellness = Math.min(95, Math.max(20, natalWellness));
+        const finalAnnualWellness = Math.min(95, Math.max(20, annualWellness));
+
+        finalAspects['Kesehatan'] = {
+            natal: Math.round(finalNatalWellness),
+            annual: Math.round(finalAnnualWellness),
+            change: finalNatalWellness > 0 ? Math.round(((finalAnnualWellness / finalNatalWellness) - 1) * 100) : 0
+        };
+
+        // 6. Aspek Potensi & Peluang
+        let natalPotential = 50; // Anggap potensi dasar adalah 50%
+        if (dmAnalysis.strengthCategory.includes('Kuat') || dmAnalysis.strengthCategory.includes('Lemah')) {
+            natalPotential += 15;
+        }
+        if (dmAnalysis.specialStructure) {
+            natalPotential += 20;
+        }
+        
+        const totalPeriodicInfluence = Object.values(periodicGodScores).reduce((sum, score) => sum + score, 0);
+        const totalNatalGodScore = tenGods.reduce((sum, god) => sum + god.score, 0) || 1;
+        const periodicPotentialModifier = (totalPeriodicInfluence / (totalNatalGodScore * 1.5)) * 30;
+
+        const annualPotential = natalPotential + periodicPotentialModifier;
+        const finalNatalPotential = Math.min(100, Math.max(5, natalPotential));
+        const finalAnnualPotential = Math.min(100, Math.max(5, annualPotential));
+        finalAspects['Peluang'] = {
+            natal: Math.round(finalNatalPotential),
+            annual: Math.round(finalAnnualPotential),
+            change: finalNatalPotential > 0 ? Math.round(((finalAnnualPotential / finalNatalPotential) - 1) * 100) : 0
+        };
+
+        // Ensure all 6 aspects are always present
+        const requiredAspects = ['Harta & Karir', 'Ekspresi & Skill', 'Hubungan', 'Dukungan & Jaringan', 'Kesehatan', 'Peluang'];
+        requiredAspects.forEach(aspect => {
+            if (!finalAspects[aspect]) {
+                finalAspects[aspect] = { natal: 30, annual: 30, change: 0 };
+            }
+        });
+
+        return finalAspects;
+    }
+
+    function displayLifeAspects(analysis) {
+        const container = document.getElementById('life-aspects-chart');
+        const htmlParts = [];
+
+        for (const aspect in analysis) {
+            const data = analysis[aspect];
+            const natalValue = data.natal ?? 30;
+            const annualValue = data.annual ?? 30;
+            const changeValue = data.change ?? 0;
+            
+            const changeColor = changeValue >= 0 ? 'text-green-400' : 'text-red-400';
+            const arrow = changeValue >= 0 ? '↑' : '↓';
+            
+            htmlParts.push(`
+                <div class="flex flex-col items-center flex-1">
+                    <div class="aspect-bar-container flex items-end justify-center w-full gap-1">
+                        <div class="aspect-bar w-1/2 bg-yellow-400 rounded-t" style="height: ${natalValue}%" title="Potensi Natal: ${natalValue}%"></div>
+                        <div class="aspect-bar w-1/2 bg-yellow-600 rounded-t" style="height: ${annualValue}%" title="Kondisi Periode Ini: ${annualValue}%"></div>
+                    </div>
+                    <p class="mt-2 text-sm font-semibold text-center">${aspect}</p>
+                    <p class="text-xs ${changeColor}">${arrow} ${Math.abs(changeValue)}%</p>
+                </div>
+            `);
+        }
+        container.innerHTML = htmlParts.join('');
+    }
+
+    // --- [FUNGSI DIPERBAIKI & DIOPTIMALKAN] ---
+    function analyzeStrategyAndSolutions(dayMasterStem, dmAnalysis, tenGods, natalInteractions, fanYinFuYin, healthAnalysis) {
+        const strategies = {
+            main: [],
+            career: [],
+            relationship: [],
+            health: []
+        };
+        
+        const { usefulGods } = dmAnalysis;
+        const topGod = tenGods.length > 0 ? tenGods[0].name : null;
+        const dmElement = STEM_DETAILS[dayMasterStem]?.element;
+        
+        if (!dmElement) {
+            strategies.main.push("⚠️ Tidak dapat menganalisis strategi karena data Day Master tidak valid.");
+            return strategies;
+        }
+        
+        const dmRelations = FIVE_ELEMENT_RELATIONSHIP[dmElement];
+
+        // Helper untuk cek apakah sebuah dewa menguntungkan
+        const checkGodFavorable = (godName) => {
+            const relationship = GOD_ELEMENT_RELATIONSHIP[godName];
+            if (!relationship) return false;
+            
+            let godElement;
+            if (relationship === 'same') {
+                godElement = dmElement;
+            } else {
+                godElement = dmRelations[relationship];
+            }
+
+            return usefulGods.favorable.includes(godElement);
+        };
+        
+        const getGodScoreByName = (name) => {
+            const god = tenGods.find(g => g.name === name);
+            return god ? god.score : 0;
+        };
+
+        // Strategi Utama berdasarkan kondisi paling darurat (Fan Yin/Fu Yin) atau Dewa terkuat
+        if (fanYinFuYin.some(a => a.type === 'FAN_YIN')) {
+            strategies.main.push(STRATEGY_DATABASE.INTERACTION_ALERTS.FAN_YIN);
+        } else if (fanYinFuYin.some(a => a.type === 'FU_YIN')) {
+            strategies.main.push(STRATEGY_DATABASE.INTERACTION_ALERTS.FU_YIN);
+        } else if (topGod && STRATEGY_DATABASE.GOD_STRATEGIES[topGod]) {
+            strategies.main.push(`🚀 **Fokus Utama Anda:** Manfaatkan energi terkuat Anda saat ini, yaitu **${topGod}**. ${STRATEGY_DATABASE.GOD_STRATEGIES[topGod]}`);
+        } else {
+            strategies.main.push("🤔 **Tidak Ada Dewa Dominan:** Bagan Anda terlihat cukup seimbang. Fokus pada menjaga keseimbangan elemen yang menguntungkan.");
+        }
+        
+        // Strategi umum berdasarkan elemen menguntungkan (batasi maksimal 2 elemen)
+        const favorableElements = usefulGods.favorable.slice(0, 2);
+        favorableElements.forEach(element => {
+            if (STRATEGY_DATABASE.USEFUL_ELEMENT_ACTIONS[element]) {
+                strategies.main.push(`🧭 **Kompas Hidup Anda:** Perkuat elemen **${element}** yang menguntungkan. ${STRATEGY_DATABASE.USEFUL_ELEMENT_ACTIONS[element]}`);
+            }
+        });
+
+        // Strategi Karir & Keuangan
+        const wealthGods = ['Direct Wealth', 'Indirect Wealth'];
+        const influenceGods = ['Direct Officer', '7 Killings'];
+
+        const hasStrongWealthGods = wealthGods.some(g => getGodScoreByName(g) > 0 && checkGodFavorable(g));
+        const hasStrongInfluenceGods = influenceGods.some(g => getGodScoreByName(g) > 0 && checkGodFavorable(g));
+        const hasCareerClash = natalInteractions.some(i => i.type === 'CLASH' && i.text.includes('Karir/Orang Tua'));
+
+        if (hasStrongWealthGods) {
+            strategies.career.push("💼 Peluang finansial sedang baik. Saatnya lebih proaktif dalam mencari sumber pendapatan atau investasi yang terukur.");
+        }
+        if (hasStrongInfluenceGods) {
+            strategies.career.push("📈 Energi karir dan kepemimpinan sedang mendukung. Tunjukkan tanggung jawab dan jangan ragu mengambil peran lebih.");
+        }
+        if (hasCareerClash) {
+            strategies.career.push("⚠️ Waspadai potensi konflik atau perubahan mendadak di tempat kerja. Jaga hubungan baik dengan atasan.");
+        }
+        if (strategies.career.length === 0) {
+            strategies.career.push("⚖️ Kondisi karir dan keuangan cenderung stabil. Fokus pada konsistensi dan perencanaan jangka panjang.");
+        }
+
+        // Strategi Hubungan
+        const spousePalaceInteraction = natalInteractions.find(i => i.text.includes('Diri/Pasangan'));
+        if (spousePalaceInteraction) {
+            const interactionType = spousePalaceInteraction.type.split('_')[0];
+            const alertMessage = STRATEGY_DATABASE.INTERACTION_ALERTS[interactionType] || 'Perhatikan dinamika hubungan Anda dengan lebih saksama.';
+            strategies.relationship.push(`❤️ Istana Pasangan Anda sedang mengalami **${interactionType}**. ${alertMessage}`);
+        } else {
+            strategies.relationship.push("👍 Hubungan personal cenderung stabil. Manfaatkan waktu ini untuk mempererat ikatan dengan orang-orang terdekat.");
+        }
+        
+        // Strategi Kesehatan
+        const healthIssues = healthAnalysis.filter(note => !note.includes("👍"));
+        if (healthIssues.length > 0) {
+            const cleanedIssues = healthIssues.map(h => h.replace(/<[^>]*>/g, '').trim()).slice(0, 3); // Batasi maksimal 3 isu
+            strategies.health.push(`🌿 Berdasarkan peta energi Anda, perhatikan area kesehatan berikut: ${cleanedIssues.map(h => `<i>\"${h}\"</i>`).join(', ')}.`);
+        } else {
+            strategies.health.push("✅ Kondisi energi Anda untuk kesehatan terlihat seimbang. Pertahankan gaya hidup sehat.");
+        }
+        strategies.health.push("🏃‍♂️ Terlepas dari analisis, menjaga pola makan, istirahat cukup, dan olahraga teratur adalah kunci kesehatan terbaik.");
+
+        return strategies;
+    }
+
+    function displayStrategyAndSolutions(strategy) {
+        const container = document.getElementById('strategy-solution-content');
+        container.innerHTML = '';
+        
+        const createSection = (title, emoji, items) => {
+            if (!items || items.length === 0) return '';
+            let html = `<div class="p-4 bg-white/50 rounded-lg"><h3 class="font-bold text-lg text-green-900">${emoji} ${title}</h3><ul class="mt-2 list-disc list-inside space-y-2 text-sm text-gray-800">`;
+            items.forEach(item => {
+                html += `<li>${item}</li>`;
+            });
+            html += `</ul></div>`;
+            return html;
+        };
+
+        const sections = [
+            createSection('Strategi Utama Periode Ini', '🚀', strategy.main),
+            createSection('Karir & Keuangan', '💼', strategy.career),
+            createSection('Hubungan & Sosial', '❤️', strategy.relationship),
+            createSection('Kesehatan & Gaya Hidup', '🌿', strategy.health)
+        ];
+        container.innerHTML = sections.join('');
+    }
+
+
+    // --- [BARU] FUNGSI-FUNGSI UNTUK CHATBOT ---
+
+    /**
+     * Generates a concise summary of the BaZi analysis for the AI context.
+     * @param {object} dmAnalysis - The result from analyzeDayMasterStrength.
+     * @param {array} tenGodsAnalysis - The result from analyzeTenGodsClassical.
+     * @param {array} fanYinFuYinAnalysis - The result from analyzeFanYinFuYin.
+     * @param {object} pillars - The pillars object.
+     * @returns {string} A summary string for the AI.
+     */
+    function generateBaziContextSummary(dmAnalysis, tenGodsAnalysis, fanYinFuYinAnalysis, pillars) {
+        if (!dmAnalysis || !tenGodsAnalysis) return "Bagan belum dianalisis.";
+        
+        let summary = `Ringkasan Bagan BaZi:
+- Day Master: ${pillars.day.stem} (${STEM_DETAILS[pillars.day.stem].element}), Kekuatan: ${dmAnalysis.percentage}% (${dmAnalysis.strengthCategory}).
+- Elemen Menguntungkan: ${dmAnalysis.usefulGods.favorable.join(', ')}.
+- Elemen Merugikan: ${dmAnalysis.usefulGods.unfavorable.join(', ')}.
+- Top 3 Dewa Dominan: ${tenGodsAnalysis.slice(0, 3).map(g => g.name).join(', ')}.
+`;
+        if (dmAnalysis.specialStructure) {
+            summary += `- Struktur Khusus: ${dmAnalysis.specialStructure.name}.\n`;
+        }
+        if (fanYinFuYinAnalysis.length > 0) {
+            const fanyin = fanYinFuYinAnalysis.filter(a => a.type === 'FAN_YIN').length;
+            const fuyin = fanYinFuYinAnalysis.filter(a => a.type === 'FU_YIN').length;
+            summary += `- Peringatan Penting: Terdapat ${fanyin > 0 ? fanyin + ' Fan Yin' : ''} ${fuyin > 0 ? fuyin + ' Fu Yin' : ''} pada periode ini.\n`;
+        }
+        return summary;
+    }
+
+    /**
+     * Handles sending a message from the user.
+     */
+    function handleSendMessage() {
+        const chatInput = document.getElementById('chat-input');
+        const userInput = chatInput.value.trim();
+        if (userInput === '') return;
+
+        displayUserMessage(userInput);
+        chatInput.value = '';
+        
+        showThinkingIndicator();
+
+        // Prepare the prompt for the Gemini API
+        const finalPrompt = `Anda adalah seorang ahli dan konsultan BaZi yang bijaksana dan suportif. Berikan penjelasan yang mudah dimengerti, praktis, dan positif. Hindari bahasa yang terlalu teknis kecuali diminta.
+Konteks Bagan BaZi yang sedang dianalisis:
+${baziContextSummary || "Bagan belum dianalisis. Jawab pertanyaan pengguna secara umum."}
+
+Pertanyaan Pengguna: "${userInput}"
+
+Jawaban Anda:`;
+
+        callGeminiAPI(finalPrompt);
+    }
+
+    /**
+     * Displays the user's message in the chat window.
+     * @param {string} message - The user's message text.
+     */
+    function displayUserMessage(message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message user-message p-3 rounded-lg';
+        messageDiv.textContent = message;
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    /**
+     * Displays the AI's message in the chat window.
+     * @param {string} message - The AI's response text.
+     */
+    function displayAiMessage(message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message ai-message p-3 rounded-lg';
+        // Simple markdown to HTML conversion
+        message = message
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/(\r\n|\n|\r)/gm, "<br>");
+        messageDiv.innerHTML = message;
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+    
+    /**
+     * Shows a "thinking" indicator while waiting for the AI response.
+     */
+    function showThinkingIndicator() {
+        const chatMessages = document.getElementById('chat-messages');
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.id = 'thinking-indicator';
+        thinkingDiv.className = 'chat-message ai-message thinking-bubble';
+        thinkingDiv.innerHTML = '<span></span><span></span><span></span>';
+        chatMessages.appendChild(thinkingDiv);
+        scrollToBottom();
+    }
+
+    /**
+     * Removes the "thinking" indicator.
+     */
+    function removeThinkingIndicator() {
+        const indicator = document.getElementById('thinking-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    /**
+     * Scrolls the chat window to the bottom.
+     */
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    /**
+     * Calls the Gemini API to get a response.
+     * @param {string} prompt - The full prompt to send to the API.
+     */
+    async function callGeminiAPI(prompt) {
+        const chatSendBtn = document.getElementById('chat-send-btn');
+        chatSendBtn.disabled = true;
+
+        // ===================================================================
+        // PENTING: ISI API KEY ANDA DI SINI
+        // ===================================================================
+        const apiKey = "AIzaSyDz_p1tQiQJxdt2VyAt9Yc-3QMnbMhKo08"; // <--- GANTI DENGAN API KEY GOOGLE GEMINI ANDA
+
+        if (apiKey === "") {
+            removeThinkingIndicator();
+            displayAiMessage("⚠️ **Kesalahan Konfigurasi:** API Key belum dimasukkan. Mohon isi API Key di dalam kode JavaScript pada variabel `apiKey`.");
+            chatSendBtn.disabled = false;
+            return;
+        }
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{
+                role: "user",
+                parts: [{ text: prompt }]
+            }],
+            generationConfig: {
+                temperature: 0.7,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+            }
+        };
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+            }
+
+            const result = await response.json();
+            
+            removeThinkingIndicator();
+
+            if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
+                const aiResponse = result.candidates[0].content.parts[0].text;
+                displayAiMessage(aiResponse);
+            } else {
+                 displayAiMessage("Maaf, saya tidak dapat memberikan respons saat ini. Mungkin ada masalah dengan respons dari API.");
+            }
+
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            removeThinkingIndicator();
+            displayAiMessage(`Maaf, terjadi kesalahan saat menghubungi asisten AI. Silakan coba lagi nanti. (${error.message})`);
+        } finally {
+            chatSendBtn.disabled = false;
+        }
+    }
+
+</script>
+</body>
+</html>
