@@ -124,13 +124,15 @@
         <div id="results-container" class="max-w-7xl mx-auto space-y-8">
             <section id="bazi-chart-result"></section>
             <section id="dm-analysis-result"></section>
+            <!-- [NEW] Bagian untuk Saran Strategi -->
+            <section id="strategic-advice-div"></section>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <section id="element-strength-analysis"></section>
                 <section id="gods-strength-analysis"></section>
             </div>
             <section id="luck-pillar-result"></section>
-            <!-- [MOVED & IMPROVED] Bagian Ming Gua dipindah ke paling bawah -->
             <section id="ming-gua-bazhai-result"></section>
+            <section id="reference-links"></section>
         </div>
 
     </div>
@@ -143,7 +145,7 @@
         const tenGods = { F: { name: 'Friend', cn: '比肩', abbr: 'F' }, RW: { name: 'Rob Wealth', cn: '劫財', abbr: 'RW' }, EG: { name: 'Eating God', cn: '食神', abbr: 'EG' }, HO: { name: 'Hurting Officer', cn: '傷官', abbr: 'HO' }, DW: { name: 'Direct Wealth', cn: '正財', abbr: 'DW' }, IW: { name: 'Indirect Wealth', cn: '偏財', abbr: 'IW' }, DO: { name: 'Direct Officer', cn: '正官', abbr: 'DO' }, '7K': { name: '7 Killings', cn: '七殺', abbr: '7K' }, DR: { name: 'Direct Resource', cn: '正印', abbr: 'DR' }, IR: { name: 'Indirect Resource', cn: '偏印', abbr: 'IR' } };
         const elementCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
         const solarMonthStartDates = [6, 5, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7];
-        const dom = { birthDayInput: document.getElementById('birth-day'), birthMonthInput: document.getElementById('birth-month'), birthYearInput: document.getElementById('birth-year'), birthHourInput: document.getElementById('birth-hour'), birthMinuteInput: document.getElementById('birth-minute'), genderInput: document.getElementById('gender'), calculateBtn: document.getElementById('calculate-bazi-btn'), resetAllBtn: document.getElementById('reset-all-btn'), resultDiv: document.getElementById('bazi-chart-result'), luckPillarResult: document.getElementById('luck-pillar-result'), elementAnalysisDiv: document.getElementById('element-strength-analysis'), dmAnalysisDiv: document.getElementById('dm-analysis-result'), godsAnalysisDiv: document.getElementById('gods-strength-analysis'), mingGuaBazhaiResult: document.getElementById('ming-gua-bazhai-result'), unknownBirthHourCheckbox: document.getElementById('unknown-birth-hour-checkbox') };
+        const dom = { birthDayInput: document.getElementById('birth-day'), birthMonthInput: document.getElementById('birth-month'), birthYearInput: document.getElementById('birth-year'), birthHourInput: document.getElementById('birth-hour'), birthMinuteInput: document.getElementById('birth-minute'), genderInput: document.getElementById('gender'), calculateBtn: document.getElementById('calculate-bazi-btn'), resetAllBtn: document.getElementById('reset-all-btn'), resultDiv: document.getElementById('bazi-chart-result'), luckPillarResult: document.getElementById('luck-pillar-result'), elementAnalysisDiv: document.getElementById('element-strength-analysis'), dmAnalysisDiv: document.getElementById('dm-analysis-result'), godsAnalysisDiv: document.getElementById('gods-strength-analysis'), mingGuaBazhaiResult: document.getElementById('ming-gua-bazhai-result'), referenceLinks: document.getElementById('reference-links'), strategicAdviceDiv: document.getElementById('strategic-advice-div'), unknownBirthHourCheckbox: document.getElementById('unknown-birth-hour-checkbox') };
         
         const shenShaData = {
             nobleman: { name: 'Bintang Penolong', cn: '天乙貴人', rule: { '甲': ['丑', '未'], '乙': ['子', '申'], '丙': ['亥', '酉'], '丁': ['亥', '酉'], '戊': ['丑', '未'], '己': ['子', '申'], '庚': ['丑', '未'], '辛': ['寅', '午'], '壬': ['卯', '巳'], '癸': ['卯', '巳'] }, basedOn: 'dayStem', type: 'good', desc: 'Bantuan tak terduga, perlindungan, kemudahan.' },
@@ -191,7 +193,7 @@
 
         // --- LOGIKA PERHITUNGAN INTI (TIDAK DIUBAH) ---
         function calculateBaziChart() {
-            dom.resultDiv.innerHTML = ""; dom.luckPillarResult.innerHTML = ""; dom.elementAnalysisDiv.innerHTML = ""; dom.dmAnalysisDiv.innerHTML = ""; dom.godsAnalysisDiv.innerHTML = ""; dom.mingGuaBazhaiResult.innerHTML = "";
+            dom.resultDiv.innerHTML = ""; dom.luckPillarResult.innerHTML = ""; dom.elementAnalysisDiv.innerHTML = ""; dom.dmAnalysisDiv.innerHTML = ""; dom.godsAnalysisDiv.innerHTML = ""; dom.mingGuaBazhaiResult.innerHTML = ""; dom.referenceLinks.innerHTML = ""; dom.strategicAdviceDiv.innerHTML = "";
             const year = parseInt(dom.birthYearInput.value), month = parseInt(dom.birthMonthInput.value), day = parseInt(dom.birthDayInput.value), isHourUnknown = dom.unknownBirthHourCheckbox.checked;
             const baziYear = (month < 1 || 1 === month && day < 5) ? year - 1 : year, yearStemIndex = (baziYear - 1924) % 10, yearBranchIndex = (baziYear - 1924) % 12;
             let baziGregorianMonth = month;
@@ -240,9 +242,12 @@
             knownPillars.forEach(p => { const storedElement = storageBranches[p.branch.char]; if (storedElement) { if (multiplier[storedElement] > 1.0) scores[storedElement] += 10; else scores[storedElement] -= 8; } });
             return scores;
         }
+        
+        // [MODIFIED] Fungsi analyzeDayMaster diperbarui untuk mendeteksi Pseudo Follower
         function analyzeDayMaster(pillars, scores) {
             const dmPillar = pillars.find(p => p.title === 'DAY');
-            if (!dmPillar || dmPillar.isUnknown) return { strength: 'Tidak diketahui', structure: 'Tidak diketahui' };
+            if (!dmPillar || dmPillar.isUnknown) return { strength: 'Tidak diketahui', structure: 'Tidak diketahui', isPseudoFollower: false };
+            
             const dmElement = dmPillar.stem.element;
             const dmElementIndex = elementCycle.indexOf(dmElement);
             const resourceElement = elementCycle[(dmElementIndex + 4) % 5];
@@ -250,16 +255,56 @@
             const outputElement = elementCycle[(dmElementIndex + 1) % 5];
             const wealthElement = elementCycle[(dmElementIndex + 2) % 5];
             const influenceElement = elementCycle[(dmElementIndex + 3) % 5];
+            
             let totalScore = Object.values(scores).reduce((sum, val) => sum + Math.max(0, val), 0) || 1;
             const getPercentage = (element) => (Math.max(0, scores[element]) / totalScore) * 100;
             const supportingPercent = getPercentage(resourceElement) + getPercentage(companionElement);
-            let isRooted = false;
-            pillars.filter(p => !p.isUnknown).forEach(p => { if(p.branch.element === dmElement) isRooted = true; if(p.hidden.main && p.hidden.main.element === dmElement) isRooted = true; p.hidden.others.forEach(h => { if(h.element === dmElement) isRooted = true; }); });
-            if (supportingPercent < 15 && !isRooted) { const dominantElement = [outputElement, wealthElement, influenceElement].sort((a, b) => getPercentage(b) - getPercentage(a))[0]; if (getPercentage(dominantElement) > 69) { let structureName = ''; if (dominantElement === outputElement) structureName = 'Follower Output (食伤)'; else if (dominantElement === wealthElement) structureName = 'Follower Wealth (财)'; else if (dominantElement === influenceElement) structureName = 'Follower Influence (官杀)'; return { strength: 'Sangat Lemah', structure: `Bagan Spesial: ${structureName}` }; } }
+
+            let rootStrength = 0;
+            pillars.filter(p => !p.isUnknown && p.title !== 'DAYUN' && p.title !== 'LIUNIAN').forEach(p => {
+                if(p.branch.element === dmElement) rootStrength += 2;
+                if(p.hidden.main && p.hidden.main.element === dmElement) rootStrength += 1;
+                p.hidden.others.forEach(h => { if(h.element === dmElement) rootStrength += 0.5; });
+            });
+
+            // Cek True Follower (Sangat Ketat)
+            if (supportingPercent < 10 && rootStrength < 1) {
+                const weakeningElements = { [outputElement]: getPercentage(outputElement), [wealthElement]: getPercentage(wealthElement), [influenceElement]: getPercentage(influenceElement) };
+                const dominantElement = Object.keys(weakeningElements).reduce((a, b) => weakeningElements[a] > weakeningElements[b] ? a : b);
+                if (getPercentage(dominantElement) > 60) {
+                    let structureName = `Follower ${dominantElement}`;
+                    return { strength: 'Sangat Lemah', structure: `Bagan Spesial: ${structureName}`, isPseudoFollower: false, followedElement: dominantElement };
+                }
+            }
+            
+            // Cek Pseudo Follower (Lebih Longgar)
+            if (supportingPercent < 25 && rootStrength < 2.5) {
+                const weakeningElements = { [outputElement]: getPercentage(outputElement), [wealthElement]: getPercentage(wealthElement), [influenceElement]: getPercentage(influenceElement) };
+                const dominantElement = Object.keys(weakeningElements).reduce((a, b) => weakeningElements[a] > weakeningElements[b] ? a : b);
+                if (getPercentage(dominantElement) > 50) {
+                    return { 
+                        strength: 'Sangat Lemah', 
+                        structure: `Pseudo Follower (${dominantElement})`, 
+                        isPseudoFollower: true, 
+                        followedElement: dominantElement,
+                        dmSupporters: [companionElement, resourceElement]
+                    };
+                }
+            }
+
+            // Klasifikasi Bagan Normal
             let strength;
-            if (supportingPercent > 69) strength = 'Sangat Kuat'; else if (supportingPercent > 59.5) strength = 'Kuat'; else if (supportingPercent > 54) strength = 'Agak Kuat'; else if (supportingPercent > 50) strength = 'Seimbang'; else if (supportingPercent > 30) strength = 'Cenderung Lemah'; else if (supportingPercent > 15) strength = 'Lemah'; else strength = 'Sangat Lemah';
-            return { strength: strength, structure: 'Bagan Normal' };
+            if (supportingPercent > 69) strength = 'Sangat Kuat'; 
+            else if (supportingPercent > 59.5) strength = 'Kuat'; 
+            else if (supportingPercent > 54) strength = 'Agak Kuat'; 
+            else if (supportingPercent > 50) strength = 'Seimbang'; 
+            else if (supportingPercent > 30) strength = 'Cenderung Lemah'; 
+            else if (supportingPercent > 15) strength = 'Lemah'; 
+            else strength = 'Sangat Lemah';
+            
+            return { strength: strength, structure: 'Bagan Normal', isPseudoFollower: false };
         }
+
         function calculate10GodsStrength(pillars) {
             const scores = { F: 0, RW: 0, EG: 0, HO: 0, DW: 0, IW: 0, DO: 0, '7K': 0, DR: 0, IR: 0 };
             const knownPillars = pillars.filter(p => !p.isUnknown);
@@ -298,48 +343,35 @@
             return found.filter((v, i, a) => a.findIndex(t => (t.name === v.name && t.pillarTitle === v.pillarTitle)) === i);
         }
 
-        // [FIXED] Fungsi untuk menghitung Ming Gua dengan rumus yang benar
         function calculateMingGua(year, gender) {
-            // Step 1: Ambil 2 digit terakhir dari tahun lahir
             const lastTwoDigits = year % 100;
-            
-            // Step 2: Jumlahkan kedua digit tersebut hingga menjadi satu digit
             let baseNumber = Math.floor(lastTwoDigits / 10) + (lastTwoDigits % 10);
             if (baseNumber > 9) {
                 baseNumber = Math.floor(baseNumber / 10) + (baseNumber % 10);
             }
-
             let kua;
-            // Step 3: Terapkan rumus berdasarkan gender dan abad kelahiran
             if (year < 2000) {
                 if (gender === 'male') {
                     kua = 10 - baseNumber;
-                } else { // female
+                } else { 
                     kua = 5 + baseNumber;
                 }
-            } else { // tahun 2000 dan setelahnya
+            } else {
                 if (gender === 'male') {
                     kua = 9 - baseNumber;
-                } else { // female
+                } else {
                     kua = 6 + baseNumber;
                 }
             }
-
-            // Step 4: Jika hasil lebih dari 9, jumlahkan digitnya
             if (kua > 9) {
                  kua = Math.floor(kua / 10) + (kua % 10);
             }
-            
-            // Aturan khusus jika hasil 0, menjadi 9
             if (kua === 0) {
                 kua = 9;
             }
-
-            // Step 5: Jika hasil akhir adalah 5, ganti sesuai gender
             if (kua === 5) {
                 return gender === 'male' ? 2 : 8;
             }
-            
             return kua;
         }
 
@@ -424,21 +456,13 @@
             container.innerHTML = `<h4 class="text-lg font-bold text-gray-800 mb-4 text-center">Monthly Pillars (流月) for ${year}</h4><div class="horizontal-scroll-container overflow-x-auto pb-4"><div class="flex space-x-3 min-w-max px-2">${cardsHtml}</div></div>`;
         }
         
-        // [MODIFIED] Fungsi display Ming Gua diperbarui dengan UI/UX yang lebih baik
         function displayMingGuaBazhai(kuaNumber) {
             const container = dom.mingGuaBazhaiResult;
             if (!kuaNumber) { container.innerHTML = ''; return; }
             const data = kuaData[kuaNumber];
             if (!data) { container.innerHTML = ''; return; }
 
-            const renderDirection = (dir, type) => `
-                <div class="p-4 rounded-lg ${type === 'good' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border">
-                    <div class="flex justify-between items-center">
-                        <p class="font-bold ${type === 'good' ? 'text-green-800' : 'text-red-800'}">${dir.name}</p>
-                        <p class="text-2xl font-bold ${type === 'good' ? 'text-green-600' : 'text-red-600'}">${dir.dir}</p>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-1">${dir.desc}</p>
-                </div>`;
+            const renderDirection = (dir, type) => `<div class="p-4 rounded-lg ${type === 'good' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'} border"><div class="flex justify-between items-center"><p class="font-bold ${type === 'good' ? 'text-green-800' : 'text-red-800'}">${dir.name}</p><p class="text-2xl font-bold ${type === 'good' ? 'text-green-600' : 'text-red-600'}">${dir.dir}</p></div><p class="text-sm text-gray-600 mt-1">${dir.desc}</p></div>`;
 
             let content = `
             <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6">
@@ -476,6 +500,71 @@
             </div>`;
             container.innerHTML = content;
         }
+
+        // [NEW] Fungsi untuk menampilkan Link Referensi
+        function displayReferenceLinks() {
+            const container = dom.referenceLinks;
+            let content = `
+            <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Sumber Referensi & Alat Bantu</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                    <a href="https://bazicalculator.co/" target="_blank" class="block p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <p class="font-semibold text-gray-800">Bazi Calculator</p>
+                        <p class="text-xs text-gray-500">Kalkulator & Plotter</p>
+                    </a>
+                    <a href="https://bazi.joeyyap.com/" target="_blank" class="block p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <p class="font-semibold text-gray-800">Joey Yap's Bazi</p>
+                        <p class="text-xs text-gray-500">Plotter Referensi</p>
+                    </a>
+                    <a href="https://destinyx.joeyyap.com/" target="_blank" class="block p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <p class="font-semibold text-gray-800">DestinyX</p>
+                        <p class="text-xs text-gray-500">Platform Analisis</p>
+                    </a>
+                    <a href="https://qimenex.masteryacademy.com/" target="_blank" class="block p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <p class="font-semibold text-gray-800">Qi Men Dun Jia</p>
+                        <p class="text-xs text-gray-500">Plotter Qi Men</p>
+                    </a>
+                    <a href="https://calvinwijaya07.github.io/kamusbazi/" target="_blank" class="block p-4 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <p class="font-semibold text-gray-800">Kamus Bazi</p>
+                        <p class="text-xs text-gray-500">Referensi Pribadi</p>
+                    </a>
+                </div>
+            </div>`;
+            container.innerHTML = content;
+        }
+
+        // [NEW] Fungsi untuk menampilkan Saran Strategi
+        function displayStrategicAdvice(natalAnalysis, pillar) {
+            const container = dom.strategicAdviceDiv;
+            container.innerHTML = ''; // Clear previous advice
+            if (!natalAnalysis.isPseudoFollower) return;
+
+            const dmSupporters = natalAnalysis.dmSupporters;
+            const followedElement = natalAnalysis.followedElement;
+            
+            let pillarSupportsDM = dmSupporters.includes(pillar.stem.element) || dmSupporters.includes(pillar.branch.element);
+            let pillarSupportsFollowed = pillar.stem.element === followedElement || pillar.branch.element === followedElement;
+
+            let adviceTitle = '';
+            let adviceText = '';
+
+            if (pillarSupportsDM) {
+                adviceTitle = "Perubahan Strategi: Bagan Kembali Normal";
+                adviceText = `Pilar periode ini membawa elemen pendukung (${dmSupporters.join('/')}) yang menguatkan Day Master. Bagan tidak lagi berperilaku sebagai Follower. Strategi terbaik adalah memperkuat Day Master.`;
+            } else if (pillarSupportsFollowed) {
+                adviceTitle = "Strategi Dikonfirmasi: Ikuti Elemen Dominan";
+                adviceText = `Pilar periode ini memperkuat elemen dominan (${followedElement}). Strategi terbaik adalah terus mengikuti (follow) elemen yang kuat dan menghindari elemen pendukung Day Master.`;
+            } else {
+                return; // No strong indication, no advice shown
+            }
+
+            container.innerHTML = `
+                <div class="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-800 p-4 rounded-lg shadow-md">
+                    <p class="font-bold text-lg">${adviceTitle}</p>
+                    <p class="mt-1 text-sm">${adviceText}</p>
+                </div>`;
+        }
+
 
         // --- FUNGSI PEMBANTU TAMPILAN & LOGIKA ---
         function createTemporaryPillar(stemIndex, branchIndex, dayMasterIndex) { const stem = heavenlyStemsData[stemIndex]; const branch = earthlyBranchesData[branchIndex]; const hidden = branch.hidden; const mainHidden = hidden.mainQi !== null ? heavenlyStemsData[hidden.mainQi] : null; const otherHidden = hidden.otherQi.map(i => heavenlyStemsData[i]); return { isUnknown: false, stem: { ...stem, god: get10God(dayMasterIndex, stemIndex) }, branch: branch, hidden: { main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null, others: otherHidden.map((h, i) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[i]) })) }, stemIndex: stemIndex, branchIndex: branchIndex }; }
@@ -526,19 +615,22 @@
                 
                 const birthYear = parseInt(dom.birthYearInput.value);
                 const gender = dom.genderInput.value;
-                const kuaNumber = calculateMingGua(birthYear, gender);
-                displayMingGuaBazhai(kuaNumber);
-
+                
                 displayElementStrength(natalChartScores, "Analisis Bagan Kelahiran");
                 display10GodsStrength(natalGodsScores);
 
                 const luckPillars = calculateLuckPillars(baziData.processedPillars, gender);
                 displayLuckPillars(luckPillars, baziData.processedPillars, birthYear);
+
+                const kuaNumber = calculateMingGua(birthYear, gender);
+                displayMingGuaBazhai(kuaNumber);
+
+                displayReferenceLinks();
             }
         });
 
         dom.resetAllBtn.addEventListener("click", () => {
-            dom.resultDiv.innerHTML = ""; dom.luckPillarResult.innerHTML = ""; dom.elementAnalysisDiv.innerHTML = ""; dom.dmAnalysisDiv.innerHTML = ""; dom.godsAnalysisDiv.innerHTML = ""; dom.mingGuaBazhaiResult.innerHTML = "";
+            dom.resultDiv.innerHTML = ""; dom.luckPillarResult.innerHTML = ""; dom.elementAnalysisDiv.innerHTML = ""; dom.dmAnalysisDiv.innerHTML = ""; dom.godsAnalysisDiv.innerHTML = ""; dom.mingGuaBazhaiResult.innerHTML = ""; dom.referenceLinks.innerHTML = ""; dom.strategicAdviceDiv.innerHTML = "";
             natalChartPillars = []; natalChartScores = null; natalDayMasterAnalysis = null; natalGodsScores = null; activeDayunScores = null; activeDayunGodsScores = null; applicableShenShaList = [];
             initializePage();
         });
@@ -550,6 +642,7 @@
                 displayDayMasterAnalysis(natalDayMasterAnalysis);
                 displayElementStrength(natalChartScores, "Analisis Bagan Kelahiran");
                 display10GodsStrength(natalGodsScores);
+                dom.strategicAdviceDiv.innerHTML = '';
                 document.querySelectorAll(".luck-pillar-card.active, .liunian-card.active").forEach(c => c.classList.remove("active"));
                 document.getElementById('liunian-container').innerHTML = '';
                 activeDayunScores = null; activeDayunGodsScores = null;
@@ -573,6 +666,7 @@
                 activeDayunGodsScores = calculate10GodsStrength(natalChartPillars.concat([dayunPillar]));
                 const currentAnalysis = analyzeDayMaster(natalChartPillars.concat([dayunPillar]), activeDayunScores);
                 displayDayMasterAnalysis(currentAnalysis);
+                displayStrategicAdvice(natalDayMasterAnalysis, dayunPillar);
 
                 const startAge = luckPillarCard.dataset.startAge;
                 displayElementStrength(activeDayunScores, `Analisis Dayun Usia ${startAge}-${parseInt(startAge)+9}`, natalChartScores);
@@ -602,6 +696,7 @@
                 const currentTotalGodsScores = calculate10GodsStrength(currentPillars);
                 const currentAnalysis = analyzeDayMaster(currentPillars, currentTotalScores);
                 displayDayMasterAnalysis(currentAnalysis);
+                displayStrategicAdvice(natalDayMasterAnalysis, liunianPillar);
                 
                 const year = liuNianCard.dataset.year;
                 displayElementStrength(currentTotalScores, `Analisis Tahun ${year}`, activeDayunScores);
