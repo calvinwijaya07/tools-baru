@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Bazi (Chart Master Lengkap)</title>
+    <title>Kalkulator Bazi (Chart Master Lengkap V2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +74,7 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Kalkulator Bazi (八字) Master</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Kalkulator Bazi (八字) Master V2</h1>
             <p class="text-gray-500 mt-2">Chart Lengkap dengan Analisis Kekuatan Elemen, 10 Gods, Shen Sha & Ming Gua</p>
         </header>
 
@@ -124,7 +124,6 @@
         <div id="results-container" class="max-w-7xl mx-auto space-y-8">
             <section id="bazi-chart-result"></section>
             <section id="dm-analysis-result"></section>
-            <!-- [NEW] Bagian untuk Saran Strategi -->
             <section id="strategic-advice-div"></section>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <section id="element-strength-analysis"></section>
@@ -145,6 +144,31 @@
         const tenGods = { F: { name: 'Friend', cn: '比肩', abbr: 'F' }, RW: { name: 'Rob Wealth', cn: '劫財', abbr: 'RW' }, EG: { name: 'Eating God', cn: '食神', abbr: 'EG' }, HO: { name: 'Hurting Officer', cn: '傷官', abbr: 'HO' }, DW: { name: 'Direct Wealth', cn: '正財', abbr: 'DW' }, IW: { name: 'Indirect Wealth', cn: '偏財', abbr: 'IW' }, DO: { name: 'Direct Officer', cn: '正官', abbr: 'DO' }, '7K': { name: '7 Killings', cn: '七殺', abbr: '7K' }, DR: { name: 'Direct Resource', cn: '正印', abbr: 'DR' }, IR: { name: 'Indirect Resource', cn: '偏印', abbr: 'IR' } };
         const elementCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
         const solarMonthStartDates = [6, 5, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7];
+        
+        // [REVISED] Database untuk 12 Qi Stages - Sekarang menggunakan tabel lookup penuh untuk akurasi maksimal
+        const twelveQiStages = {
+            stages: [
+                { name: 'Growth', cn: '長生' }, { name: 'Bath', cn: '沐浴' }, { name: 'Youth', cn: '冠帶' },
+                { name: 'Peak', cn: '臨官' }, { name: 'Prime', cn: '帝旺' }, { name: 'Weakening', cn: '衰' },
+                { name: 'Sickness', cn: '病' }, { name: 'Death', cn: '死' }, { name: 'Grave', cn: '墓' },
+                { name: 'Extinct', cn: '絕' }, { name: 'Conception', cn: '胎' }, { name: 'Nurture', cn: '養' }
+            ],
+            // Format: [Zi, Chou, Yin, Mao, Chen, Si, Wu, Wei, Shen, You, Xu, Hai] - Index 0-11
+            lookup: {
+                '甲': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0],  // Growth at Hai
+                '乙': [7, 6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8],   // Growth at Wu (Reverse)
+                '丙': [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],   // Growth at Yin
+                '丁': [4, 3, 2, 1, 0, 11, 10, 9, 8, 7, 6, 5],   // Growth at You (Reverse)
+                '戊': [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],   // Follows Bing
+                '己': [4, 3, 2, 1, 0, 11, 10, 9, 8, 7, 6, 5],   // Follows Ding (Reverse)
+                '庚': [7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6],   // Growth at Si
+                '辛': [1, 0, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2],   // Growth at Zi (Reverse)
+                '壬': [4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3],   // Growth at Shen
+                '癸': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 11]    // Growth at Mao (Reverse)
+            },
+            branchOrder: ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+        };
+
         const dom = { birthDayInput: document.getElementById('birth-day'), birthMonthInput: document.getElementById('birth-month'), birthYearInput: document.getElementById('birth-year'), birthHourInput: document.getElementById('birth-hour'), birthMinuteInput: document.getElementById('birth-minute'), genderInput: document.getElementById('gender'), calculateBtn: document.getElementById('calculate-bazi-btn'), resetAllBtn: document.getElementById('reset-all-btn'), resultDiv: document.getElementById('bazi-chart-result'), luckPillarResult: document.getElementById('luck-pillar-result'), elementAnalysisDiv: document.getElementById('element-strength-analysis'), dmAnalysisDiv: document.getElementById('dm-analysis-result'), godsAnalysisDiv: document.getElementById('gods-strength-analysis'), mingGuaBazhaiResult: document.getElementById('ming-gua-bazhai-result'), referenceLinks: document.getElementById('reference-links'), strategicAdviceDiv: document.getElementById('strategic-advice-div'), unknownBirthHourCheckbox: document.getElementById('unknown-birth-hour-checkbox') };
         
         const shenShaData = {
@@ -191,7 +215,20 @@
         let activeDayunGodsScores = null;
         let applicableShenShaList = [];
 
-        // --- LOGIKA PERHITUNGAN INTI (TIDAK DIUBAH) ---
+        // --- LOGIKA PERHITUNGAN INTI ---
+        
+        // [REVISED] Helper function untuk 12 Qi Stage - Menggunakan tabel lookup
+        function get12QiStage(stemChar, branchChar) {
+            const branchIndex = twelveQiStages.branchOrder.indexOf(branchChar);
+            if (branchIndex === -1) return null;
+
+            const stageIndexArray = twelveQiStages.lookup[stemChar];
+            if (!stageIndexArray) return null;
+
+            const stageIndex = stageIndexArray[branchIndex];
+            return twelveQiStages.stages[stageIndex];
+        }
+
         function calculateBaziChart() {
             dom.resultDiv.innerHTML = ""; dom.luckPillarResult.innerHTML = ""; dom.elementAnalysisDiv.innerHTML = ""; dom.dmAnalysisDiv.innerHTML = ""; dom.godsAnalysisDiv.innerHTML = ""; dom.mingGuaBazhaiResult.innerHTML = ""; dom.referenceLinks.innerHTML = ""; dom.strategicAdviceDiv.innerHTML = "";
             const year = parseInt(dom.birthYearInput.value), month = parseInt(dom.birthMonthInput.value), day = parseInt(dom.birthDayInput.value), isHourUnknown = dom.unknownBirthHourCheckbox.checked;
@@ -209,7 +246,28 @@
             if (!isHourUnknown) { const hour = parseInt(dom.birthHourInput.value), dayStemForHourCalc = hour >= 23 ? (dayStemIndex + 1) % 10 : dayStemIndex, ziHourStemIndex = [0,2,4,6,8,0,2,4,6,8][dayStemForHourCalc]; hourBranchIndex = Math.floor((hour + 1) / 2) % 12; hourStemIndex = (ziHourStemIndex + hourBranchIndex) % 10; }
             const pillars = [ { title: "HOUR", title_cn: "時", stemIndex: hourStemIndex, branchIndex: hourBranchIndex }, { title: "DAY", title_cn: "日", stemIndex: dayStemIndex, branchIndex: dayBranchIndex }, { title: "MONTH", title_cn: "月", stemIndex: monthStemIndex, branchIndex: monthBranchIndex }, { title: "YEAR", title_cn: "年", stemIndex: yearStemIndex, branchIndex: yearBranchIndex } ];
             const dayMasterIndex = dayStemIndex;
-            const processedPillars = pillars.map(p => { if (null === p.stemIndex) return { ...p, isUnknown: true, stem: { char: "?", pinyin: "Unknown" }, branch: { char: "?", pinyin: "Unknown" }, hidden: { main: null, others: [] }, stemIndex: null, branchIndex: null }; const stem = heavenlyStemsData[p.stemIndex], branch = earthlyBranchesData[p.branchIndex], hidden = branch.hidden, mainHidden = null !== hidden.mainQi ? heavenlyStemsData[hidden.mainQi] : null, otherHidden = hidden.otherQi.map(i => heavenlyStemsData[i]); return { ...p, isUnknown: false, stem: { ...stem, god: get10God(dayMasterIndex, p.stemIndex) || { name: "Day Master", cn: "日主", abbr: "DM" } }, branch: branch, hidden: { main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null, others: otherHidden.map((h, i) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[i]) })) }, stemIndex: p.stemIndex, branchIndex: p.branchIndex }; });
+            const processedPillars = pillars.map(p => { 
+                if (null === p.stemIndex) return { ...p, isUnknown: true, stem: { char: "?", pinyin: "Unknown" }, branch: { char: "?", pinyin: "Unknown" }, hidden: { main: null, others: [] }, stemIndex: null, branchIndex: null }; 
+                const stem = heavenlyStemsData[p.stemIndex];
+                const branch = earthlyBranchesData[p.branchIndex];
+                const hidden = branch.hidden;
+                const mainHidden = null !== hidden.mainQi ? heavenlyStemsData[hidden.mainQi] : null;
+                const otherHidden = hidden.otherQi.map(i => heavenlyStemsData[i]);
+                const stage = get12QiStage(stem.char, branch.char); // Hitung 12 Qi Stage
+                return { 
+                    ...p, 
+                    isUnknown: false, 
+                    stem: { ...stem, god: get10God(dayMasterIndex, p.stemIndex) || { name: "Day Master", cn: "日主", abbr: "DM" } }, 
+                    branch: branch, 
+                    hidden: { 
+                        main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null, 
+                        others: otherHidden.map((h, i) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[i]) })) 
+                    }, 
+                    stage: stage, // Tambahkan data stage ke pilar
+                    stemIndex: p.stemIndex, 
+                    branchIndex: p.branchIndex 
+                }; 
+            });
             
             activeKongWang = calculateKongWang(dayGanzhiIndex);
             
@@ -222,28 +280,68 @@
         function get10God(dayMasterIndex, targetStemIndex){const dayMaster = heavenlyStemsData[dayMasterIndex], targetStem = heavenlyStemsData[targetStemIndex]; if(dayMaster.char === targetStem.char) return tenGods.F; const dmElementIndex = elementCycle.indexOf(dayMaster.element), targetElementIndex = elementCycle.indexOf(targetStem.element); if(dayMaster.element === targetStem.element) return tenGods.RW; const cycleDiff = (targetElementIndex - dmElementIndex + 5) % 5; switch(cycleDiff){ case 1: return dayMaster.polarity === targetStem.polarity ? tenGods.EG : tenGods.HO; case 2: return dayMaster.polarity === targetStem.polarity ? tenGods.IW : tenGods.DW; case 3: return dayMaster.polarity === targetStem.polarity ? tenGods['7K'] : tenGods.DO; case 4: return dayMaster.polarity === targetStem.polarity ? tenGods.IR : tenGods.DR; default: return null; }}
         function calculateLuckPillars(natalPillars, gender) { const yearStemPolarity = natalPillars[3].stem.polarity; const monthStemIndex = natalPillars[2].stemIndex; const monthBranchIndex = natalPillars[2].branchIndex; let direction = (gender === 'male' && yearStemPolarity === 'Yin') || (gender === 'female' && yearStemPolarity === 'Yang') ? -1 : 1; const luckPillars = []; for (let i = 1; i <= 10; i++) { const lpStemIndex = (monthStemIndex + i * direction + 100) % 10; const lpBranchIndex = (monthBranchIndex + i * direction + 120) % 12; const startAge = (i - 1) * 10 + 2; luckPillars.push({ stemIndex: lpStemIndex, branchIndex: lpBranchIndex, startAge: startAge, endAge: startAge + 9 }); } return { pillars: luckPillars }; }
         function calculateKongWang(dayGanzhiIndex) { const decade = Math.floor(dayGanzhiIndex / 10); const voidMap = [ ['Xu', 'Hai'], ['Shen', 'You'], ['Wu', 'Wei'], ['Chen', 'Si'], ['Yin', 'Mao'], ['Zi', 'Chou'] ]; return voidMap[decade]; }
+
         function calculateElementStrength(basePillars, additionalPillars = []) {
             const allPillars = [...basePillars, ...additionalPillars];
             const scores = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
             const knownPillars = allPillars.filter(p => !p.isUnknown);
             if (knownPillars.length < 3) return scores;
-            const seasonalStrengthMap = { 'Yin': { Wood: 2.0, Fire: 1.5, Water: 1.2, Earth: 0.8, Metal: 0.6 }, 'Mao': { Wood: 2.2, Fire: 1.6, Water: 1.1, Earth: 0.7, Metal: 0.5 }, 'Chen': { Earth: 2.0, Wood: 1.4, Fire: 1.2, Metal: 0.8, Water: 0.7 }, 'Si': { Fire: 2.0, Earth: 1.5, Wood: 1.2, Metal: 0.8, Water: 0.6 }, 'Wu': { Fire: 2.2, Earth: 1.6, Wood: 1.1, Metal: 0.7, Water: 0.5 }, 'Wei': { Earth: 2.0, Fire: 1.4, Metal: 1.2, Wood: 0.8, Water: 0.7 }, 'Shen': { Metal: 2.0, Water: 1.5, Earth: 1.2, Fire: 0.8, Wood: 0.6 }, 'You': { Metal: 2.2, Water: 1.6, Earth: 1.1, Fire: 0.7, Wood: 0.5 }, 'Xu': { Earth: 2.0, Metal: 1.4, Fire: 1.2, Water: 0.8, Wood: 0.7 }, 'Hai': { Water: 2.0, Wood: 1.5, Metal: 1.2, Fire: 0.8, Earth: 0.6 }, 'Zi': { Water: 2.2, Wood: 1.6, Metal: 1.1, Fire: 0.7, Earth: 0.5 }, 'Chou': { Earth: 2.0, Water: 1.4, Metal: 1.2, Wood: 0.8, Fire: 0.7 } };
+
+            const seasonalStrengthMap = {
+                'Yin':  { Wood: 2.2, Fire: 1.6, Water: 1.2, Earth: 0.7, Metal: 0.5 }, 'Mao':  { Wood: 2.5, Fire: 1.8, Water: 1.1, Earth: 0.6, Metal: 0.4 }, 'Chen': { Earth: 1.8, Wood: 1.6, Water: 1.4, Metal: 1.0, Fire: 0.8 },
+                'Si':   { Fire: 2.2, Earth: 1.6, Wood: 1.2, Metal: 0.7, Water: 0.5 }, 'Wu':   { Fire: 2.5, Earth: 1.8, Wood: 1.1, Metal: 0.6, Water: 0.4 }, 'Wei':  { Earth: 1.8, Fire: 1.6, Metal: 1.4, Wood: 1.0, Water: 0.8 },
+                'Shen': { Metal: 2.2, Water: 1.6, Earth: 1.2, Fire: 0.7, Wood: 0.5 }, 'You':  { Metal: 2.5, Water: 1.8, Earth: 1.1, Fire: 0.6, Wood: 0.4 }, 'Xu':   { Earth: 1.8, Metal: 1.6, Fire: 1.4, Wood: 1.0, Water: 0.8 },
+                'Hai':  { Water: 2.2, Wood: 1.6, Metal: 1.2, Fire: 0.7, Earth: 0.5 }, 'Zi':   { Water: 2.5, Wood: 1.8, Metal: 1.1, Fire: 0.6, Earth: 0.4 }, 'Chou': { Earth: 1.8, Water: 1.6, Metal: 1.4, Fire: 1.0, Wood: 0.8 }
+            };
+
             const monthBranchPinyin = basePillars[2].branch.pinyin;
             const multiplier = seasonalStrengthMap[monthBranchPinyin];
-            knownPillars.forEach(p => { scores[p.stem.element] += 11 * multiplier[p.stem.element]; scores[p.branch.element] += 24 * multiplier[p.branch.element]; if (p.hidden.main) scores[p.hidden.main.element] += 8 * multiplier[p.hidden.main.element]; p.hidden.others.forEach(h => scores[h.element] += 4 * multiplier[h.element]); });
+
+            knownPillars.forEach(p => {
+                scores[p.stem.element] += 12 * multiplier[p.stem.element];
+                scores[p.branch.element] += 10 * multiplier[p.branch.element];
+                if (p.hidden.main) { scores[p.hidden.main.element] += 8 * multiplier[p.hidden.main.element]; }
+                p.hidden.others.forEach(h => { scores[h.element] += 4 * multiplier[h.element]; });
+            });
+
             const allStems = knownPillars.map(p => p.stem);
-            allStems.forEach((stem) => { let isRooted = false; knownPillars.forEach(p => { if (p.branch.element === stem.element) isRooted = true; if (p.hidden.main && p.hidden.main.element === stem.element) isRooted = true; p.hidden.others.forEach(h => { if (h.element === stem.element) isRooted = true; }); }); if (isRooted) { scores[stem.element] += 16; const stemPillar = knownPillars.find(p => p.stem.char === stem.char); if (stemPillar && (stemPillar.title === 'DAY' || stemPillar.title === 'MONTH')) { scores[stem.element] += 11; } } });
+            allStems.forEach((stem) => {
+                let isRooted = false;
+                knownPillars.forEach(p => {
+                    if (p.branch.element === stem.element) isRooted = true;
+                    if (p.hidden.main && p.hidden.main.element === stem.element) isRooted = true;
+                    p.hidden.others.forEach(h => { if (h.element === stem.element) isRooted = true; });
+                });
+                if (isRooted) { scores[stem.element] += 15 * multiplier[stem.element]; }
+            });
+
             const branches = knownPillars.map(p => p.branch.pinyin);
-            const threeHarmony = { Water: ['Shen', 'Zi', 'Chen'], Fire: ['Yin', 'Wu', 'Xu'], Metal: ['Si', 'You', 'Chou'], Wood: ['Hai', 'Mao', 'Wei'] };
-            for (const [element, combo] of Object.entries(threeHarmony)) { if (combo.every(b => branches.includes(b))) scores[element] += 30; else if ((branches.includes(combo[0]) && branches.includes(combo[1])) || (branches.includes(combo[1]) && branches.includes(combo[2]))) { scores[element] += 15; } }
-            const sixHarmony = { 'Zi-Chou': 'Earth', 'Yin-Hai': 'Wood', 'Mao-Xu': 'Fire', 'Chen-You': 'Metal', 'Si-Shen': 'Water', 'Wu-Wei': 'Fire' };
-            for (const [pair, element] of Object.entries(sixHarmony)) { const [b1, b2] = pair.split('-'); if (branches.includes(b1) && branches.includes(b2)) { scores[element] += 16; } }
-            const storageBranches = { 'Chen': 'Water', 'Wei': 'Wood', 'Xu': 'Fire', 'Chou': 'Metal' };
-            knownPillars.forEach(p => { const storedElement = storageBranches[p.branch.char]; if (storedElement) { if (multiplier[storedElement] > 1.0) scores[storedElement] += 10; else scores[storedElement] -= 8; } });
+            let combinationApplied = false;
+
+            const seasonalCombos = { Wood: ['Yin', 'Mao', 'Chen'], Fire: ['Si', 'Wu', 'Wei'], Metal: ['Shen', 'You', 'Xu'], Water: ['Hai', 'Zi', 'Chou'] };
+            for (const [element, combo] of Object.entries(seasonalCombos)) {
+                if (combo.every(b => branches.includes(b))) { scores[element] += 60; combinationApplied = true; break; }
+            }
+
+            if (!combinationApplied) {
+                const threeHarmony = { Water: ['Shen', 'Zi', 'Chen'], Fire: ['Yin', 'Wu', 'Xu'], Metal: ['Si', 'You', 'Chou'], Wood: ['Hai', 'Mao', 'Wei'] };
+                for (const [element, combo] of Object.entries(threeHarmony)) {
+                    if (combo.every(b => branches.includes(b))) { scores[element] += 45; combinationApplied = true; break; }
+                    else if ((branches.includes(combo[0]) && branches.includes(combo[1])) || (branches.includes(combo[1]) && branches.includes(combo[2]))) { scores[element] += 25; }
+                }
+            }
+            
+            if (!combinationApplied) {
+                const sixHarmony = { 'Zi-Chou': 'Earth', 'Yin-Hai': 'Wood', 'Mao-Xu': 'Fire', 'Chen-You': 'Metal', 'Si-Shen': 'Water', 'Wu-Wei': 'Fire' };
+                for (const [pair, element] of Object.entries(sixHarmony)) {
+                    const [b1, b2] = pair.split('-');
+                    if (branches.includes(b1) && branches.includes(b2)) { const isActivated = allStems.some(s => s.element === element); scores[element] += isActivated ? 20 : 10; }
+                }
+            }
+
             return scores;
         }
         
-        // [MODIFIED] Fungsi analyzeDayMaster diperbarui untuk mendeteksi Pseudo Follower
         function analyzeDayMaster(pillars, scores) {
             const dmPillar = pillars.find(p => p.title === 'DAY');
             if (!dmPillar || dmPillar.isUnknown) return { strength: 'Tidak diketahui', structure: 'Tidak diketahui', isPseudoFollower: false };
@@ -262,45 +360,39 @@
 
             let rootStrength = 0;
             pillars.filter(p => !p.isUnknown && p.title !== 'DAYUN' && p.title !== 'LIUNIAN').forEach(p => {
-                if(p.branch.element === dmElement) rootStrength += 2;
-                if(p.hidden.main && p.hidden.main.element === dmElement) rootStrength += 1;
-                p.hidden.others.forEach(h => { if(h.element === dmElement) rootStrength += 0.5; });
+                const branch = p.branch;
+                if (p.title === 'DAY' && branch.element === dmElement) rootStrength += 3;
+                else if (branch.element === dmElement) rootStrength += 2;
+                if (p.hidden.main && p.hidden.main.element === dmElement) rootStrength += 1.5;
+                p.hidden.others.forEach(h => { if (h.element === dmElement) rootStrength += 0.5; });
             });
 
-            // Cek True Follower (Sangat Ketat)
-            if (supportingPercent < 10 && rootStrength < 1) {
+            if (supportingPercent < 28 && rootStrength < 2.5) {
                 const weakeningElements = { [outputElement]: getPercentage(outputElement), [wealthElement]: getPercentage(wealthElement), [influenceElement]: getPercentage(influenceElement) };
                 const dominantElement = Object.keys(weakeningElements).reduce((a, b) => weakeningElements[a] > weakeningElements[b] ? a : b);
-                if (getPercentage(dominantElement) > 60) {
-                    let structureName = `Follower ${dominantElement}`;
-                    return { strength: 'Sangat Lemah', structure: `Bagan Spesial: ${structureName}`, isPseudoFollower: false, followedElement: dominantElement };
-                }
-            }
-            
-            // Cek Pseudo Follower (Lebih Longgar)
-            if (supportingPercent < 25 && rootStrength < 2.5) {
-                const weakeningElements = { [outputElement]: getPercentage(outputElement), [wealthElement]: getPercentage(wealthElement), [influenceElement]: getPercentage(influenceElement) };
-                const dominantElement = Object.keys(weakeningElements).reduce((a, b) => weakeningElements[a] > weakeningElements[b] ? a : b);
-                if (getPercentage(dominantElement) > 50) {
+                if (getPercentage(dominantElement) > 55) {
+                    const isTrueFollower = supportingPercent < 12 && rootStrength < 1;
                     return { 
-                        strength: 'Sangat Lemah', 
-                        structure: `Pseudo Follower (${dominantElement})`, 
-                        isPseudoFollower: true, 
+                        strength: isTrueFollower ? 'Sangat Lemah (Follower)' : 'Sangat Lemah (Pseudo Follower)', 
+                        structure: `Bagan Spesial: Follow ${dominantElement}`, 
+                        isPseudoFollower: !isTrueFollower, 
                         followedElement: dominantElement,
                         dmSupporters: [companionElement, resourceElement]
                     };
                 }
             }
 
-            // Klasifikasi Bagan Normal
             let strength;
-            if (supportingPercent > 69) strength = 'Sangat Kuat'; 
-            else if (supportingPercent > 59.5) strength = 'Kuat'; 
-            else if (supportingPercent > 54) strength = 'Agak Kuat'; 
-            else if (supportingPercent > 50) strength = 'Seimbang'; 
-            else if (supportingPercent > 30) strength = 'Cenderung Lemah'; 
-            else if (supportingPercent > 15) strength = 'Lemah'; 
-            else strength = 'Sangat Lemah';
+            if (supportingPercent > 65) { strength = 'Sangat Kuat';
+            } else if (supportingPercent > 58) { strength = 'Kuat';
+            } else if (supportingPercent >= 52 && supportingPercent <= 58) { strength = 'Seimbang (Cenderung Kuat)';
+            } else if (supportingPercent > 48 && supportingPercent < 52) {
+                 if (rootStrength >= 3.5) strength = 'Seimbang (Cenderung Kuat)';
+                 else if (rootStrength < 1.5) strength = 'Seimbang (Cenderung Lemah)';
+                 else strength = 'Seimbang';
+            } else if (supportingPercent >= 42 && supportingPercent <= 48) { strength = 'Seimbang (Cenderung Lemah)';
+            } else if (supportingPercent >= 30 && supportingPercent < 42) { strength = 'Lemah';
+            } else { strength = 'Sangat Lemah'; }
             
             return { strength: strength, structure: 'Bagan Normal', isPseudoFollower: false };
         }
@@ -501,7 +593,6 @@
             container.innerHTML = content;
         }
 
-        // [NEW] Fungsi untuk menampilkan Link Referensi
         function displayReferenceLinks() {
             const container = dom.referenceLinks;
             let content = `
@@ -533,7 +624,6 @@
             container.innerHTML = content;
         }
 
-        // [NEW] Fungsi untuk menampilkan Saran Strategi
         function displayStrategicAdvice(natalAnalysis, pillar) {
             const container = dom.strategicAdviceDiv;
             container.innerHTML = ''; // Clear previous advice
@@ -569,7 +659,20 @@
         // --- FUNGSI PEMBANTU TAMPILAN & LOGIKA ---
         function createTemporaryPillar(stemIndex, branchIndex, dayMasterIndex) { const stem = heavenlyStemsData[stemIndex]; const branch = earthlyBranchesData[branchIndex]; const hidden = branch.hidden; const mainHidden = hidden.mainQi !== null ? heavenlyStemsData[hidden.mainQi] : null; const otherHidden = hidden.otherQi.map(i => heavenlyStemsData[i]); return { isUnknown: false, stem: { ...stem, god: get10God(dayMasterIndex, stemIndex) }, branch: branch, hidden: { main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null, others: otherHidden.map((h, i) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[i]) })) }, stemIndex: stemIndex, branchIndex: branchIndex }; }
         function createStemCell(pillar, palace) { return `<div class="relative flex-1 p-4 border-b border-gray-200 min-h-[140px] flex flex-col justify-center" data-stem-index="${pillar.stemIndex}"><div class="absolute top-2 left-2 text-left"><p class="font-semibold text-gray-500 text-xs">${pillar.stem.god.cn}</p><p class="text-gray-400 text-xs">${pillar.stem.god.abbr}</p></div><p class="text-green-700 font-bold text-sm uppercase tracking-wide">${palace}</p><p class="hanzi mt-1">${pillar.stem.char}</p><p class="font-semibold text-gray-700">${pillar.stem.pinyin}</p><p class="text-sm text-gray-500">${pillar.stem.polarity} ${pillar.stem.element}</p></div>`; }
-        function createBranchCell(pillar, relation, kongWangBranches) { const isVoid = kongWangBranches.includes(pillar.branch.pinyin); return `<div class="relative flex-1 p-4 border-b border-gray-200 min-h-[140px] flex flex-col justify-center"><p class="text-blue-700 font-bold text-sm uppercase tracking-wide">${relation}</p><p class="hanzi mt-1">${pillar.branch.char}</p><p class="font-semibold text-gray-700">${pillar.branch.pinyin} / ${pillar.branch.shio_char} ${pillar.branch.shio}</p><p class="text-sm text-gray-500">${pillar.branch.polarity} ${pillar.branch.element}</p> ${isVoid ? '<span class="kong-wang-indicator">DE</span>' : ''} </div>`; }
+        
+        function createBranchCell(pillar, relation, kongWangBranches) { 
+            const isVoid = kongWangBranches.includes(pillar.branch.pinyin); 
+            const stageInfo = pillar.stage ? `<div class="mt-2"><span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">${pillar.stage.cn} ${pillar.stage.name}</span></div>` : '';
+            return `<div class="relative flex-1 p-4 border-b border-gray-200 min-h-[140px] flex flex-col justify-center">
+                        <p class="text-blue-700 font-bold text-sm uppercase tracking-wide">${relation}</p>
+                        <p class="hanzi mt-1">${pillar.branch.char}</p>
+                        <p class="font-semibold text-gray-700">${pillar.branch.pinyin} / ${pillar.branch.shio_char} ${pillar.branch.shio}</p>
+                        <p class="text-sm text-gray-500">${pillar.branch.polarity} ${pillar.branch.element}</p> 
+                        ${stageInfo}
+                        ${isVoid ? '<span class="kong-wang-indicator">DE</span>' : ''} 
+                    </div>`; 
+        }
+
         function createHiddenStemsCell(pillar) { return `<div class="flex-1 p-4 border-b border-gray-200 flex justify-around items-center min-h-[90px]">${renderHiddenStems(pillar.hidden)}</div>`; }
         
         function createShenShaCell(pillar, shenShaList) {
