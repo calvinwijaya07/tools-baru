@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Bazi (Chart Master Lengkap V2)</title>
+    <title>Kalkulator Bazi (Chart Master Lengkap V3.4)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +74,7 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Kalkulator Bazi (八字) Master V2</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Kalkulator Bazi (Chart Master Lengkap V3.4)</h1>
             <p class="text-gray-500 mt-2">Chart Lengkap dengan Analisis Kekuatan Elemen, 10 Gods, Shen Sha & Ming Gua</p>
         </header>
 
@@ -145,7 +145,6 @@
         const elementCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
         const solarMonthStartDates = [6, 5, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7];
         
-        // [REVISED] Database untuk 12 Qi Stages - Sekarang menggunakan tabel lookup penuh untuk akurasi maksimal
         const twelveQiStages = {
             stages: [
                 { name: 'Growth', cn: '長生' }, { name: 'Bath', cn: '沐浴' }, { name: 'Youth', cn: '冠帶' },
@@ -153,18 +152,12 @@
                 { name: 'Sickness', cn: '病' }, { name: 'Death', cn: '死' }, { name: 'Grave', cn: '墓' },
                 { name: 'Extinct', cn: '絕' }, { name: 'Conception', cn: '胎' }, { name: 'Nurture', cn: '養' }
             ],
-            // Format: [Zi, Chou, Yin, Mao, Chen, Si, Wu, Wei, Shen, You, Xu, Hai] - Index 0-11
             lookup: {
-                '甲': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0],  // Growth at Hai
-                '乙': [7, 6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8],   // Growth at Wu (Reverse)
-                '丙': [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],   // Growth at Yin
-                '丁': [4, 3, 2, 1, 0, 11, 10, 9, 8, 7, 6, 5],   // Growth at You (Reverse)
-                '戊': [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],   // Follows Bing
-                '己': [4, 3, 2, 1, 0, 11, 10, 9, 8, 7, 6, 5],   // Follows Ding (Reverse)
-                '庚': [7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6],   // Growth at Si
-                '辛': [1, 0, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2],   // Growth at Zi (Reverse)
-                '壬': [4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3],   // Growth at Shen
-                '癸': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 11]    // Growth at Mao (Reverse)
+                '甲': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0], '乙': [7, 6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8],
+                '丙': [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9], '丁': [4, 3, 2, 1, 0, 11, 10, 9, 8, 7, 6, 5],
+                '戊': [10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9], '己': [4, 3, 2, 1, 0, 11, 10, 9, 8, 7, 6, 5],
+                '庚': [7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6], '辛': [1, 0, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2],
+                '壬': [4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3], '癸': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 11]
             },
             branchOrder: ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
         };
@@ -217,14 +210,11 @@
 
         // --- LOGIKA PERHITUNGAN INTI ---
         
-        // [REVISED] Helper function untuk 12 Qi Stage - Menggunakan tabel lookup
         function get12QiStage(stemChar, branchChar) {
             const branchIndex = twelveQiStages.branchOrder.indexOf(branchChar);
             if (branchIndex === -1) return null;
-
             const stageIndexArray = twelveQiStages.lookup[stemChar];
             if (!stageIndexArray) return null;
-
             const stageIndex = stageIndexArray[branchIndex];
             return twelveQiStages.stages[stageIndex];
         }
@@ -253,19 +243,13 @@
                 const hidden = branch.hidden;
                 const mainHidden = null !== hidden.mainQi ? heavenlyStemsData[hidden.mainQi] : null;
                 const otherHidden = hidden.otherQi.map(i => heavenlyStemsData[i]);
-                const stage = get12QiStage(stem.char, branch.char); // Hitung 12 Qi Stage
+                const stage = get12QiStage(stem.char, branch.char);
                 return { 
-                    ...p, 
-                    isUnknown: false, 
+                    ...p, isUnknown: false, 
                     stem: { ...stem, god: get10God(dayMasterIndex, p.stemIndex) || { name: "Day Master", cn: "日主", abbr: "DM" } }, 
                     branch: branch, 
-                    hidden: { 
-                        main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null, 
-                        others: otherHidden.map((h, i) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[i]) })) 
-                    }, 
-                    stage: stage, // Tambahkan data stage ke pilar
-                    stemIndex: p.stemIndex, 
-                    branchIndex: p.branchIndex 
+                    hidden: { main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null, others: otherHidden.map((h, i) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[i]) })) }, 
+                    stage: stage, stemIndex: p.stemIndex, branchIndex: p.branchIndex 
                 }; 
             });
             
@@ -281,6 +265,7 @@
         function calculateLuckPillars(natalPillars, gender) { const yearStemPolarity = natalPillars[3].stem.polarity; const monthStemIndex = natalPillars[2].stemIndex; const monthBranchIndex = natalPillars[2].branchIndex; let direction = (gender === 'male' && yearStemPolarity === 'Yin') || (gender === 'female' && yearStemPolarity === 'Yang') ? -1 : 1; const luckPillars = []; for (let i = 1; i <= 10; i++) { const lpStemIndex = (monthStemIndex + i * direction + 100) % 10; const lpBranchIndex = (monthBranchIndex + i * direction + 120) % 12; const startAge = (i - 1) * 10 + 2; luckPillars.push({ stemIndex: lpStemIndex, branchIndex: lpBranchIndex, startAge: startAge, endAge: startAge + 9 }); } return { pillars: luckPillars }; }
         function calculateKongWang(dayGanzhiIndex) { const decade = Math.floor(dayGanzhiIndex / 10); const voidMap = [ ['Xu', 'Hai'], ['Shen', 'You'], ['Wu', 'Wei'], ['Chen', 'Si'], ['Yin', 'Mao'], ['Zi', 'Chou'] ]; return voidMap[decade]; }
 
+        // [REVISED FUNCTION V3.4] - Menambahkan Logika Clash pada Musim
         function calculateElementStrength(basePillars, additionalPillars = []) {
             const allPillars = [...basePillars, ...additionalPillars];
             const scores = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
@@ -293,9 +278,20 @@
                 'Shen': { Metal: 2.2, Water: 1.6, Earth: 1.2, Fire: 0.7, Wood: 0.5 }, 'You':  { Metal: 2.5, Water: 1.8, Earth: 1.1, Fire: 0.6, Wood: 0.4 }, 'Xu':   { Earth: 1.8, Metal: 1.6, Fire: 1.4, Wood: 1.0, Water: 0.8 },
                 'Hai':  { Water: 2.2, Wood: 1.6, Metal: 1.2, Fire: 0.7, Earth: 0.5 }, 'Zi':   { Water: 2.5, Wood: 1.8, Metal: 1.1, Fire: 0.6, Earth: 0.4 }, 'Chou': { Earth: 1.8, Water: 1.6, Metal: 1.4, Fire: 1.0, Wood: 0.8 }
             };
-
+            
+            const branches = knownPillars.map(p => p.branch.pinyin);
             const monthBranchPinyin = basePillars[2].branch.pinyin;
-            const multiplier = seasonalStrengthMap[monthBranchPinyin];
+            let multiplier = { ...seasonalStrengthMap[monthBranchPinyin] };
+
+            // [LOGIKA BARU] Cek Clash pada Pilar Bulan
+            const clashMap = { 'Zi': 'Wu', 'Chou': 'Wei', 'Yin': 'Shen', 'Mao': 'You', 'Chen': 'Xu', 'Si': 'Hai', 'Wu': 'Zi', 'Wei': 'Chou', 'Shen': 'Yin', 'You': 'Mao', 'Xu': 'Chen', 'Hai': 'Si' };
+            const clashingBranch = clashMap[monthBranchPinyin];
+            if (branches.includes(clashingBranch)) {
+                // Jika pilar bulan di-clash, kurangi efek musim secara drastis
+                for (const el in multiplier) {
+                    multiplier[el] = 1 + (multiplier[el] - 1) * 0.3; // Mengurangi efek bonus/malus musim sebesar 70%
+                }
+            }
 
             knownPillars.forEach(p => {
                 scores[p.stem.element] += 12 * multiplier[p.stem.element];
@@ -315,7 +311,6 @@
                 if (isRooted) { scores[stem.element] += 15 * multiplier[stem.element]; }
             });
 
-            const branches = knownPillars.map(p => p.branch.pinyin);
             let combinationApplied = false;
 
             const seasonalCombos = { Wood: ['Yin', 'Mao', 'Chen'], Fire: ['Si', 'Wu', 'Wei'], Metal: ['Shen', 'You', 'Xu'], Water: ['Hai', 'Zi', 'Chou'] };
@@ -342,11 +337,13 @@
             return scores;
         }
         
+        // [REVISED FUNCTION V3.3] - Menganalisis Kekuatan Day Master dan Struktur Bagan Spesial
         function analyzeDayMaster(pillars, scores) {
             const dmPillar = pillars.find(p => p.title === 'DAY');
-            if (!dmPillar || dmPillar.isUnknown) return { strength: 'Tidak diketahui', structure: 'Tidak diketahui', isPseudoFollower: false };
-            
-            const dmElement = dmPillar.stem.element;
+            if (!dmPillar || dmPillar.isUnknown) return { strength: 'Tidak Diketahui', structure: 'Tidak Diketahui', note: null };
+
+            const dmStem = dmPillar.stem;
+            const dmElement = dmStem.element;
             const dmElementIndex = elementCycle.indexOf(dmElement);
             const resourceElement = elementCycle[(dmElementIndex + 4) % 5];
             const companionElement = dmElement;
@@ -354,61 +351,137 @@
             const wealthElement = elementCycle[(dmElementIndex + 2) % 5];
             const influenceElement = elementCycle[(dmElementIndex + 3) % 5];
             
-            let totalScore = Object.values(scores).reduce((sum, val) => sum + Math.max(0, val), 0) || 1;
+            const totalScore = Object.values(scores).reduce((sum, val) => sum + Math.max(0, val), 0) || 1;
             const getPercentage = (element) => (Math.max(0, scores[element]) / totalScore) * 100;
+
             const supportingPercent = getPercentage(resourceElement) + getPercentage(companionElement);
+            const influencePercent = getPercentage(influenceElement);
+            const monthPillar = pillars.find(p => p.title === 'MONTH');
+            const monthBranch = monthPillar.branch;
 
-            let rootStrength = 0;
-            pillars.filter(p => !p.isUnknown && p.title !== 'DAYUN' && p.title !== 'LIUNIAN').forEach(p => {
-                const branch = p.branch;
-                if (p.title === 'DAY' && branch.element === dmElement) rootStrength += 3;
-                else if (branch.element === dmElement) rootStrength += 2;
-                if (p.hidden.main && p.hidden.main.element === dmElement) rootStrength += 1.5;
-                p.hidden.others.forEach(h => { if (h.element === dmElement) rootStrength += 0.5; });
-            });
-
-            if (supportingPercent < 28 && rootStrength < 2.5) {
-                const weakeningElements = { [outputElement]: getPercentage(outputElement), [wealthElement]: getPercentage(wealthElement), [influenceElement]: getPercentage(influenceElement) };
-                const dominantElement = Object.keys(weakeningElements).reduce((a, b) => weakeningElements[a] > weakeningElements[b] ? a : b);
-                if (getPercentage(dominantElement) > 55) {
-                    const isTrueFollower = supportingPercent < 12 && rootStrength < 1;
+            // --- Cek 1: Bagan Spesial - Vibrant (Dominan) & Semi-Vibrant ---
+            const vibrantSeasons = {
+                Wood: ['Yin', 'Mao'], Fire: ['Si', 'Wu'], Earth: ['Chen', 'Xu', 'Chou', 'Wei'],
+                Metal: ['Shen', 'You'], Water: ['Hai', 'Zi']
+            };
+            if (vibrantSeasons[dmElement].includes(monthBranch.pinyin) && supportingPercent > 65) {
+                const vibrantNames = { Wood: 'Jia Yi (曲直格)', Fire: 'Yan Shang (炎上格)', Earth: 'Jia Se (稼穑格)', Metal: 'Cong Ge (从革格)', Water: 'Run Xia (润下格)' };
+                if (influencePercent < 5) {
+                    return { strength: 'Sangat Kuat', structure: `Bagan Spesial: ${vibrantNames[dmElement]}`, note: null };
+                } else if (influencePercent >= 5 && influencePercent < 15) {
                     return { 
-                        strength: isTrueFollower ? 'Sangat Lemah (Follower)' : 'Sangat Lemah (Pseudo Follower)', 
-                        structure: `Bagan Spesial: Follow ${dominantElement}`, 
-                        isPseudoFollower: !isTrueFollower, 
-                        followedElement: dominantElement,
-                        dmSupporters: [companionElement, resourceElement]
+                        strength: 'Sangat Kuat', 
+                        structure: `Bagan Spesial: Semi/Pseudo Vibrant`, 
+                        note: `Catatan: Bagan ini sangat kuat namun kehadiran elemen Officer (${influenceElement}) yang lemah membuatnya tidak murni.`
+                    };
+                }
+            }
+            
+            // --- Cek 1.5: Bagan Spesial - Follow Strong (Cóng Qiáng) & Semi-Follow Strong ---
+            if (monthBranch.element === resourceElement && supportingPercent > 65) {
+                 if (influencePercent < 5) {
+                    return { strength: 'Sangat Kuat', structure: `Bagan Spesial: Cóng Qiáng Gé (Follow Strong)`, note: 'Day Master mengikuti kekuatan elemen Resource dan Companion.' };
+                } else if (influencePercent >= 5 && influencePercent < 15) {
+                     return { 
+                        strength: 'Sangat Kuat', 
+                        structure: `Bagan Spesial: Semi/Pseudo Cóng Qiáng`, 
+                        note: `Catatan: Bagan sangat kuat tapi kehadiran elemen Officer (${influenceElement}) yang lemah membuatnya tidak murni.`
                     };
                 }
             }
 
+
+            // --- Cek 2: Bagan Spesial - Follower (Mengikuti) ---
+            let rootStrength = 0;
+            pillars.forEach(p => {
+                if(p.branch.element === dmElement) rootStrength += 2;
+                if(p.hidden.main && p.hidden.main.element === dmElement) rootStrength += 1.5;
+                p.hidden.others.forEach(h => { if(h.element === dmElement) rootStrength += 0.5; });
+            });
+
+            if (supportingPercent < 25 && rootStrength < 2.0) {
+                const weakeningElements = { Output: getPercentage(outputElement), Wealth: getPercentage(wealthElement), Influence: getPercentage(influenceElement) };
+                const dominantWeakElement = Object.keys(weakeningElements).reduce((a, b) => weakeningElements[a] > weakeningElements[b] ? a : b);
+                
+                if (weakeningElements[dominantWeakElement] > 60) {
+                    const isTrueFollower = supportingPercent < 10 && rootStrength < 1.0;
+                    return { 
+                        strength: isTrueFollower ? 'Sangat Lemah (True Follower)' : 'Sangat Lemah (Pseudo Follower)', 
+                        structure: `Bagan Spesial: Follow ${dominantWeakElement}`, 
+                        isPseudoFollower: !isTrueFollower,
+                        note: isTrueFollower ? null : 'Catatan: Terdapat sisa elemen pendukung/akar yang lemah, membuat bagan ini menjadi "Pseudo Follower".'
+                    };
+                }
+            }
+            
+            // --- Cek 3: Bagan Spesial - Transformasi ---
+            const transformCombos = { '甲': '己', '乙': '庚', '丙': '辛', '丁': '壬', '戊': '癸' };
+            const transformResult = { '甲': 'Earth', '乙': 'Metal', '丙': 'Water', '丁': 'Wood', '戊': 'Fire' };
+            const dayStemChar = dmStem.char;
+            const monthStemChar = monthPillar.stem.char;
+            
+            if (transformCombos[dayStemChar] === monthStemChar) {
+                const transformedElement = transformResult[dayStemChar];
+                const seasonalSupport = { 'Earth': ['Chen', 'Xu', 'Chou', 'Wei'], 'Metal': ['Shen', 'You'], 'Water': ['Hai', 'Zi'], 'Wood': ['Yin', 'Mao'], 'Fire': ['Si', 'Wu'] };
+                
+                if (seasonalSupport[transformedElement].includes(monthBranch.pinyin)) {
+                    let isClashFree = true;
+                    if(pillars.some(p => p.stem.element === influenceElement)) isClashFree = false;
+                    if (isClashFree) {
+                        return { strength: 'Sangat Kuat', structure: `Bagan Spesial: Transformasi (${transformedElement})`, note: null };
+                    }
+                }
+            }
+
+            // --- Jika bukan bagan spesial, analisis sebagai Bagan Normal ---
             let strength;
-            if (supportingPercent > 65) { strength = 'Sangat Kuat';
-            } else if (supportingPercent > 58) { strength = 'Kuat';
-            } else if (supportingPercent >= 52 && supportingPercent <= 58) { strength = 'Seimbang (Cenderung Kuat)';
-            } else if (supportingPercent > 48 && supportingPercent < 52) {
-                 if (rootStrength >= 3.5) strength = 'Seimbang (Cenderung Kuat)';
-                 else if (rootStrength < 1.5) strength = 'Seimbang (Cenderung Lemah)';
+            if (supportingPercent > 55) { strength = 'Sangat Kuat';
+            } else if (supportingPercent > 48) { strength = 'Kuat';
+            } else if (supportingPercent >= 42 && supportingPercent <= 48) {
+                 if (rootStrength >= 2.5) strength = 'Seimbang (Cenderung Kuat)';
+                 else if (rootStrength < 1.0) strength = 'Seimbang (Cenderung Lemah)';
                  else strength = 'Seimbang';
-            } else if (supportingPercent >= 42 && supportingPercent <= 48) { strength = 'Seimbang (Cenderung Lemah)';
-            } else if (supportingPercent >= 30 && supportingPercent < 42) { strength = 'Lemah';
+            } else if (supportingPercent >= 35 && supportingPercent < 42) { strength = 'Lemah';
             } else { strength = 'Sangat Lemah'; }
             
-            return { strength: strength, structure: 'Bagan Normal', isPseudoFollower: false };
+            return { strength: strength, structure: 'Bagan Normal', note: null };
         }
 
-        function calculate10GodsStrength(pillars) {
-            const scores = { F: 0, RW: 0, EG: 0, HO: 0, DW: 0, IW: 0, DO: 0, '7K': 0, DR: 0, IR: 0 };
+        // [REVISED FUNCTION V3.4] - Logika Baru untuk Skor 10 Gods
+        function calculate10GodsStrength(elementScores, pillars) {
+            const godsScores = { F: 0, RW: 0, EG: 0, HO: 0, DW: 0, IW: 0, DO: 0, '7K': 0, DR: 0, IR: 0 };
             const knownPillars = pillars.filter(p => !p.isUnknown);
-            if (knownPillars.length < 3) return scores;
-            const seasonalStrengthMap = { 'Yin': { Wood: 2.0, Fire: 1.5, Water: 1.2, Earth: 0.8, Metal: 0.6 }, 'Mao': { Wood: 2.2, Fire: 1.6, Water: 1.1, Earth: 0.7, Metal: 0.5 }, 'Chen': { Earth: 2.0, Wood: 1.4, Fire: 1.2, Metal: 0.8, Water: 0.7 }, 'Si': { Fire: 2.0, Earth: 1.5, Wood: 1.2, Metal: 0.8, Water: 0.6 }, 'Wu': { Fire: 2.2, Earth: 1.6, Wood: 1.1, Metal: 0.7, Water: 0.5 }, 'Wei': { Earth: 2.0, Fire: 1.4, Metal: 1.2, Wood: 0.8, Water: 0.7 }, 'Shen': { Metal: 2.0, Water: 1.5, Earth: 1.2, Fire: 0.8, Wood: 0.6 }, 'You': { Metal: 2.2, Water: 1.6, Earth: 1.1, Fire: 0.7, Wood: 0.5 }, 'Xu': { Earth: 2.0, Metal: 1.4, Fire: 1.2, Water: 0.8, Wood: 0.7 }, 'Hai': { Water: 2.0, Wood: 1.5, Metal: 1.2, Fire: 0.8, Earth: 0.6 }, 'Zi': { Water: 2.2, Wood: 1.6, Metal: 1.1, Fire: 0.7, Earth: 0.5 }, 'Chou': { Earth: 2.0, Water: 1.4, Metal: 1.2, Wood: 0.8, Fire: 0.7 } };
-            const monthBranchPinyin = natalChartPillars[2].branch.pinyin;
-            const multiplier = seasonalStrengthMap[monthBranchPinyin];
-            const godCounts = {};
-            knownPillars.forEach(p => { if (p.stem.god && p.stem.god.abbr !== 'DM') { let score = 15; if (p.title === 'MONTH' || p.title === 'DAY') score += 5; const godElement = p.stem.element; score *= multiplier[godElement]; let isRooted = false; knownPillars.forEach(rootPillar => { if (rootPillar.branch.element === godElement) isRooted = true; if (rootPillar.hidden.main && rootPillar.hidden.main.element === godElement) isRooted = true; rootPillar.hidden.others.forEach(h => { if (h.element === godElement) isRooted = true; }); }); if (!isRooted) score *= 0.3; scores[p.stem.god.abbr] += score; godCounts[p.stem.god.abbr] = (godCounts[p.stem.god.abbr] || 0) + 1; } const processHiddenStem = (hs, baseScore) => { if (hs && hs.god) { let score = baseScore * multiplier[hs.element]; scores[hs.god.abbr] += score; godCounts[hs.god.abbr] = (godCounts[hs.god.abbr] || 0) + 1; } }; processHiddenStem(p.hidden.main, 11); p.hidden.others.forEach(h => processHiddenStem(h, 8)); });
-            const dmElement = natalChartPillars[1].stem.element;
-            for (const godAbbr in scores) { if (godCounts[godAbbr] > 1) { scores[godAbbr] += (godCounts[godAbbr] - 1) * 5; } if ((godAbbr === 'F' || godAbbr === 'RW') && multiplier[dmElement] > 1.5) { scores[godAbbr] += 16; } }
-            return scores;
+            if (knownPillars.length < 3) return godsScores;
+
+            // 1. Hitung total 'potensi' dasar untuk setiap elemen dari semua komponen
+            const basePotentials = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
+            const godDistribution = {}; // e.g., { Wood: { F: 15, RW: 10 }, Fire: { EG: 25 } }
+
+            knownPillars.forEach(p => {
+                const processComponent = (component, baseValue) => {
+                    if (!component || !component.god || component.god.abbr === 'DM') return;
+                    const el = component.element;
+                    const god = component.god.abbr;
+                    basePotentials[el] += baseValue;
+                    if (!godDistribution[el]) godDistribution[el] = {};
+                    godDistribution[el][god] = (godDistribution[el][god] || 0) + baseValue;
+                };
+                if (p.stem) processComponent(p.stem, 15);
+                if (p.hidden.main) processComponent(p.hidden.main, 10);
+                p.hidden.others.forEach(h => processComponent(h, 6));
+            });
+
+            // 2. Distribusikan skor elemen final secara proporsional
+            for (const el in elementScores) {
+                if (basePotentials[el] > 0 && godDistribution[el]) {
+                    for (const god in godDistribution[el]) {
+                        const proportion = godDistribution[el][god] / basePotentials[el];
+                        godsScores[god] += elementScores[el] * proportion;
+                    }
+                }
+            }
+
+            return godsScores;
         }
         
         function getApplicableShenSha(natalPillars) {
@@ -475,7 +548,8 @@
             dom.resultDiv.innerHTML = chartHtml;
         }
         function displayDayMasterAnalysis(analysis) {
-            const content = `<div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center"><h3 class="text-xl font-bold text-gray-800 mb-2">Analisis Day Master</h3><div class="flex justify-center items-center gap-4"><p class="text-lg"><span class="font-semibold">Struktur Bagan:</span> ${analysis.structure}</p><p class="text-lg"><span class="font-semibold">Kekuatan:</span> ${analysis.strength}</p></div></div>`;
+            const noteHtml = analysis.note ? `<p class="text-sm text-gray-500 mt-2">${analysis.note}</p>` : '';
+            const content = `<div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center"><h3 class="text-xl font-bold text-gray-800 mb-2">Analisis Day Master</h3><div class="flex justify-center items-center gap-4"><p class="text-lg"><span class="font-semibold">Struktur Bagan:</span> ${analysis.structure}</p><p class="text-lg"><span class="font-semibold">Kekuatan:</span> ${analysis.strength}</p></div>${noteHtml}</div>`;
             dom.dmAnalysisDiv.innerHTML = content;
         }
         function displayElementStrength(currentScores, title = "Peta Kekuatan Elemen", baseScores = null) {
@@ -503,6 +577,7 @@
             let content = `<div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4"><h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Peta Kekuatan 10 Gods</h3><div class="space-y-2">`;
             const sortedGods = Object.entries(currentScores).sort(([, a], [, b]) => b - a);
             for (const [godAbbr, score] of sortedGods) {
+                if(score <= 0) continue;
                 const currentPercentage = Math.max(0, (score / totalCurrentScore) * 100);
                 const godInfo = tenGods[godAbbr];
                 const barElement = godToElementMap[godAbbr];
@@ -711,7 +786,7 @@
                 natalChartPillars = baziData.processedPillars;
                 natalChartScores = calculateElementStrength(natalChartPillars);
                 natalDayMasterAnalysis = analyzeDayMaster(natalChartPillars, natalChartScores);
-                natalGodsScores = calculate10GodsStrength(natalChartPillars);
+                natalGodsScores = calculate10GodsStrength(natalChartScores, natalChartPillars);
                 activeDayunScores = null; activeDayunGodsScores = null;
 
                 displayDayMasterAnalysis(natalDayMasterAnalysis);
@@ -740,11 +815,9 @@
 
         dom.elementAnalysisDiv.addEventListener("click", e => {
             if (e.target && e.target.id === 'reset-analysis-btn') {
-                const natalShenSha = findShenShaInPillars(applicableShenShaList, natalChartPillars);
-                displayBaziChart(natalChartPillars, activeKongWang, natalShenSha);
                 displayDayMasterAnalysis(natalDayMasterAnalysis);
                 displayElementStrength(natalChartScores, "Analisis Bagan Kelahiran");
-                display10GodsStrength(natalGodsScores);
+                display10GodsStrength(natalGodsScores, natalChartPillars);
                 dom.strategicAdviceDiv.innerHTML = '';
                 document.querySelectorAll(".luck-pillar-card.active, .liunian-card.active").forEach(c => c.classList.remove("active"));
                 document.getElementById('liunian-container').innerHTML = '';
@@ -766,7 +839,7 @@
                 const dayunPillar = createTemporaryPillar(dayunStemIndex, dayunBranchIndex, dayMasterIndex);
                 
                 activeDayunScores = calculateElementStrength(natalChartPillars, [dayunPillar]);
-                activeDayunGodsScores = calculate10GodsStrength(natalChartPillars.concat([dayunPillar]));
+                activeDayunGodsScores = calculate10GodsStrength(activeDayunScores, natalChartPillars.concat([dayunPillar]));
                 const currentAnalysis = analyzeDayMaster(natalChartPillars.concat([dayunPillar]), activeDayunScores);
                 displayDayMasterAnalysis(currentAnalysis);
                 displayStrategicAdvice(natalDayMasterAnalysis, dayunPillar);
@@ -796,7 +869,7 @@
 
                 const currentPillars = natalChartPillars.concat([dayunPillar, liunianPillar]);
                 const currentTotalScores = calculateElementStrength(currentPillars);
-                const currentTotalGodsScores = calculate10GodsStrength(currentPillars);
+                const currentTotalGodsScores = calculate10GodsStrength(currentTotalScores, currentPillars);
                 const currentAnalysis = analyzeDayMaster(currentPillars, currentTotalScores);
                 displayDayMasterAnalysis(currentAnalysis);
                 displayStrategicAdvice(natalDayMasterAnalysis, liunianPillar);
