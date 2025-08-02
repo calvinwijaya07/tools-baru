@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Bazi dengan Deteksi Bagan Spesial V7.0</title>
+    <title>Kalkulator Bazi dengan Analisis Dinamis V11.0 (Fitur Liu Ri)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +22,7 @@
         .luck-pillar-card.active, .liunian-card.active, .liuyue-card.active { border-color: #059669; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4); transform: translateY(-4px); }
         .luck-pillar-card.current { border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); background-color: #ecfdf5; }
         .liunian-card.current { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); background-color: #fffbeb; }
+        .liuyue-card.current { border-color: #6366f1; box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); background-color: #eef2ff; }
         .card-hidden-stems { display: flex; justify-content: space-around; align-items: center; padding-top: 10px; margin-top: 10px; border-top: 1px solid #e2e8f0; }
         .card-hidden-stems.compact { padding-top: 6px; margin-top: 6px; }
         .kong-wang-indicator { position: absolute; top: 6px; right: 6px; background-color: #475569; color: white; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 9999px; line-height: 1; z-index: 10; }
@@ -29,13 +30,27 @@
         .shen-sha-item { font-size: 11px; line-height: 1.3; color: #475569; font-weight: 500; text-align: center; }
         .shen-sha-item-good { color: #059669; }
         .shen-sha-item-bad { color: #be123c; }
-        .strength-bar-container { background-color: #e2e8f0; border-radius: 0.5rem; overflow: hidden; }
-        .strength-bar { height: 1.5rem; transition: width 0.5s ease-in-out; }
+        .strength-bar-container { background-color: #e2e8f0; border-radius: 0.5rem; overflow: hidden; height: 1.5rem; }
+        .strength-bar { height: 100%; transition: width 0.5s ease-in-out; }
         .bazi-label-col {
             writing-mode: vertical-rl;
             text-orientation: mixed;
             transform: rotate(180deg);
             white-space: nowrap;
+        }
+        .change-indicator {
+            font-weight: 700;
+            margin-left: 8px;
+        }
+        .change-indicator.up { color: #10b981; }
+        .change-indicator.down { color: #ef4444; }
+        .interaction-log-item {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+        .interaction-log-item b {
+            font-weight: 600;
         }
     </style>
 </head>
@@ -44,7 +59,7 @@
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-10">
             <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Kalkulator Bazi</h1>
-            <p class="text-slate-500 mt-2">Plotter Modern dengan Engine Analisis & Profiling 10 Gods</p>
+            <p class="text-slate-500 mt-2">Plotter Modern dengan Engine Analisis Dinamis (v11.0 - Liu Ri)</p>
         </header>
 
         <!-- Input Section -->
@@ -93,8 +108,9 @@
         <div id="results-container" class="max-w-7xl mx-auto space-y-10">
             <section id="bazi-chart-result"></section>
             <section id="element-strength-analysis"></section>
-            <section id="scenario-analysis-result"></section> <!-- NEW: For scenario analysis -->
             <section id="ten-gods-strength-analysis"></section>
+            <section id="dynamic-analysis-result"></section>
+            <section id="scenario-analysis-result"></section>
             <section id="luck-pillar-result"></section>
             <section id="ming-gua-bazhai-result"></section>
         </div>
@@ -108,15 +124,20 @@
         const earthlyBranchesData = [ { char: '子', pinyin: 'Zi', element: 'Water', polarity: 'Yang', shio: 'Tikus', shio_char: '鼠', hidden: { mainQi: 9, otherQi: [] } }, { char: '丑', pinyin: 'Chou', element: 'Earth', polarity: 'Yin', shio: 'Kerbau', shio_char: '牛', hidden: { mainQi: 5, otherQi: [9, 7] } }, { char: '寅', pinyin: 'Yin', element: 'Wood', polarity: 'Yang', shio: 'Macan', shio_char: '虎', hidden: { mainQi: 0, otherQi: [2, 4] } }, { char: '卯', pinyin: 'Mao', element: 'Wood', polarity: 'Yin', shio: 'Kelinci', shio_char: '兔', hidden: { mainQi: 1, otherQi: [] } }, { char: '辰', pinyin: 'Chen', element: 'Earth', polarity: 'Yang', shio: 'Naga', shio_char: '龍', hidden: { mainQi: 4, otherQi: [1, 9] } }, { char: '巳', pinyin: 'Si', element: 'Fire', polarity: 'Yin', shio: 'Ular', shio_char: '蛇', hidden: { mainQi: 2, otherQi: [6, 4] } }, { char: '午', pinyin: 'Wu', element: 'Fire', polarity: 'Yang', shio: 'Kuda', shio_char: '馬', hidden: { mainQi: 3, otherQi: [5] } }, { char: '未', pinyin: 'Wei', element: 'Earth', polarity: 'Yin', shio: 'Kambing', shio_char: '羊', hidden: { mainQi: 5, otherQi: [3, 1] } }, { char: '申', pinyin: 'Shen', element: 'Metal', polarity: 'Yang', shio: 'Monyet', shio_char: '猴', hidden: { mainQi: 6, otherQi: [8, 4] } }, { char: '酉', pinyin: 'You', element: 'Metal', polarity: 'Yin', shio: 'Ayam', shio_char: '雞', hidden: { mainQi: 7, otherQi: [] } }, { char: '戌', pinyin: 'Xu', element: 'Earth', polarity: 'Yang', shio: 'Anjing', shio_char: '狗', hidden: { mainQi: 4, otherQi: [7, 3] } }, { char: '亥', pinyin: 'Hai', element: 'Water', polarity: 'Yin', shio: 'Babi', shio_char: '豬', hidden: { mainQi: 8, otherQi: [0] } } ];
         const tenGods = { F: { name: 'Friend', cn: '比肩', abbr: 'F' }, RW: { name: 'Rob Wealth', cn: '劫財', abbr: 'RW' }, EG: { name: 'Eating God', cn: '食神', abbr: 'EG' }, HO: { name: 'Hurting Officer', cn: '傷官', abbr: 'HO' }, DW: { name: 'Direct Wealth', cn: '正財', abbr: 'DW' }, IW: { name: 'Indirect Wealth', cn: '偏財', abbr: 'IW' }, DO: { name: 'Direct Officer', cn: '正官', abbr: 'DO' }, '7K': { name: '7 Killings', cn: '七殺', abbr: '7K' }, DR: { name: 'Direct Resource', cn: '正印', abbr: 'DR' }, IR: { name: 'Indirect Resource', cn: '偏印', abbr: 'IR' } };
         const elementCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
-        const solarMonthStartDates = [6, 5, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7]; // For Bazi months Feb-Jan
+        const solarMonthStartDates = [4, 5, 5, 6, 6, 7, 7, 8, 8, 8, 7, 7]; // Adjusted for more general accuracy
         const gregorianToSolarOrderMap = [11,0,1,2,3,4,5,6,7,8,9,10]; // Maps JS Month (0-11) to solarMonthStartDates index
         const qiStages = { 'Yang Wood': { 11: '長生', 0: '沐浴', 1: '冠帶', 2: '臨官', 3: '帝旺', 4: '衰', 5: '病', 6: '死', 7: '墓', 8: '絕', 9: '胎', 10: '養' }, 'Yin Wood': { 6: '長生', 5: '沐浴', 4: '冠帶', 3: '臨官', 2: '帝旺', 1: '衰', 0: '病', 11: '死', 10: '墓', 9: '絕', 8: '胎', 7: '養' }, 'Yang Fire': { 2: '長生', 3: '沐浴', 4: '冠帶', 5: '臨官', 6: '帝旺', 7: '衰', 8: '病', 9: '死', 10: '墓', 11: '絕', 0: '胎', 1: '養' }, 'Yin Fire': { 9: '長生', 8: '沐浴', 7: '冠帶', 6: '臨官', 5: '帝旺', 4: '衰', 3: '病', 2: '死', 1: '墓', 0: '絕', 11: '胎', 10: '養' }, 'Yang Earth': { 2: '長生', 3: '沐浴', 4: '冠帶', 5: '臨官', 6: '帝旺', 7: '衰', 8: '病', 9: '死', 10: '墓', 11: '絕', 0: '胎', 1: '養' }, 'Yin Earth': { 9: '長生', 8: '沐浴', 7: '冠帶', 6: '臨官', 5: '帝旺', 4: '衰', 3: '病', 2: '死', 1: '墓', 0: '絕', 11: '胎', 10: '養' }, 'Yang Metal': { 5: '長生', 6: '沐浴', 7: '冠帶', 8: '臨官', 9: '帝旺', 10: '衰', 11: '病', 0: '死', 1: '墓', 2: '絕', 3: '胎', 4: '養' }, 'Yin Metal': { 0: '長生', 11: '沐浴', 10: '冠帶', 9: '臨官', 8: '帝旺', 7: '衰', 6: '病', 5: '死', 4: '墓', 3: '絕', 2: '胎', 1: '養' }, 'Yang Water': { 8: '長生', 9: '沐浴', 10: '冠帶', 11: '臨官', 0: '帝旺', 1: '衰', 2: '病', 3: '死', 4: '墓', 5: '絕', 6: '胎', 7: '養' }, 'Yin Water': { 3: '長生', 2: '沐浴', 1: '冠帶', 0: '臨官', 11: '帝旺', 10: '衰', 9: '病', 8: '死', 7: '墓', 6: '絕', 5: '胎', 4: '養' } };
         const qiStageNames = { '長生': 'Growth', '沐浴': 'Bath', '冠帶': 'Dressing', '臨官': 'Officer', '帝旺': 'Prosperity', '衰': 'Decline', '病': 'Sickness', '死': 'Death', '墓': 'Tomb', '絕': 'Extinction', '胎': 'Embryo', '養': 'Nourishment' };
         const shenShaData = { nobleman: { name: 'Nobleman', cn: '天乙貴人', rule: { '甲': ['丑', '未'], '乙': ['子', '申'], '丙': ['亥', '酉'], '丁': ['亥', '酉'], '戊': ['丑', '未'], '己': ['子', '申'], '庚': ['丑', '未'], '辛': ['寅', '午'], '壬': ['卯', '巳'], '癸': ['卯', '巳'] }, basedOn: 'dayStem', type: 'good', desc: 'Bantuan tak terduga, perlindungan, kemudahan.' }, fortuneVirtue: { name: 'Fortune Virtue', cn: '福德', rule: { '甲': '寅', '乙': '申', '丙': '巳', '丁': '亥', '戊': '巳', '己': '寅', '庚': '申', '辛': '巳', '壬': '亥', '癸': '亥' }, basedOn: 'dayStem', type: 'good', desc: 'Keberuntungan, kemakmuran, pikiran damai.' }, redMatchmaker: { name: 'Red Matchmaker', cn: '紅鸞', rule: { '子': '卯', '丑': '寅', '寅': '丑', '卯': '子', '辰': '亥', '巳': '戌', '午': '酉', '未': '申', '申': '未', '酉': '午', '戌': '巳', '亥': '辰' }, basedOn: 'yearBranch', type: 'good', desc: 'Asmara, pernikahan, peristiwa bahagia.' }, goldCarriage: { name: 'Gold Carriage', cn: '金輿', rule: { '甲': '辰', '乙': '巳', '丙': '未', '丁': '申', '戊': '未', '己': '申', '庚': '戌', '辛': '亥', '壬': '丑', '癸': '寅' }, basedOn: 'dayStem', type: 'good', desc: 'Status, kekayaan, pasangan mendukung, kenyamanan materi.' }, goldenLock: { name: 'Golden Lock', cn: '金匱', rule: { '甲': '丑', '乙': '子', '丙': '戌', '丁': '酉', '戊': '戌', '己': '酉', '庚': '未', '辛': '午', '壬': '辰', '癸': '卯' }, basedOn: 'dayStem', type: 'good', desc: 'Kemampuan mengelola keuangan, bakat menabung.' }, academicStar: { name: 'Intelligence', cn: '文昌', rule: { '甲': '巳', '乙': '午', '丙': '申', '丁': '酉', '戊': '申', '己': '酉', '庚': '亥', '辛': '子', '壬': '寅', '癸': '卯' }, basedOn: 'dayStem', type: 'good', desc: 'Kecerdasan, kemampuan belajar, kreativitas, literatur.' }, studyHall: { name: 'Study Hall', cn: '學堂', rule: { '甲': '亥', '乙': '午', '丙': '寅', '丁': '酉', '戊': '寅', '己': '酉', '庚': '巳', '辛': '子', '壬': '申', '癸': '卯' }, basedOn: 'dayStem', type: 'good', desc: 'Kecerdasan akademis, mudah menyerap pengetahuan formal.' }, peachBlossom: { name: 'Peach Blossom', cn: '桃花', rule: { '寅': '卯', '午': '卯', '戌': '卯', '亥': '子', '卯': '子', '未': '子', '申': '酉', '子': '酉', '辰': '酉', '巳': '午', '酉': '午', '丑': '午' }, basedOn: 'dayOrYearBranch', type: 'neutral', desc: 'Pesona, daya tarik, hubungan sosial, bakat seni.' }, saltyPool: { name: 'Salty Pool', cn: '咸池', rule: { '寅': '卯', '午': '卯', '戌': '卯', '亥': '子', '卯': '子', '未': '子', '申': '酉', '子': '酉', '辰': '酉', '巳': '午', '酉': '午', '丑': '午' }, basedOn: 'dayOrYearBranch', type: 'neutral', desc: 'Nama lain Bunga Persik, terkait pesona dan romansa.' }, redChamber: { name: 'Red Chamber', cn: '紅艷', rule: { '甲': '午', '乙': '申', '丙': '寅', '丁': '未', '戊': '辰', '己': '辰', '庚': '戌', '辛': '酉', '壬': '子', '癸': '申' }, basedOn: 'dayStem', type: 'neutral', desc: 'Daya tarik romantis kuat, pesona sensual, terkadang rumit.' }, generalStar: { name: 'The General Star', cn: '將星', rule: { '寅': '午', '午': '午', '戌': '午', '亥': '卯', '卯': '卯', '未': '卯', '申': '子', '子': '子', '辰': '子', '巳': '酉', '酉': '酉', '丑': '酉' }, basedOn: 'dayOrYearBranch', type: 'good', desc: 'Otoritas, kepemimpinan, ketegasan, keberanian.' }, travelingHorse: { name: 'Sky Horse', cn: '驛馬', rule: { '寅': '申', '午': '申', '戌': '申', '亥': '巳', '卯': '巳', '未': '巳', '申': '寅', '子': '寅', '辰': '寅', '巳': '亥', '酉': '亥', '丑': '亥' }, basedOn: 'dayOrYearBranch', type: 'neutral', desc: 'Pergerakan, perjalanan, perubahan, ambisi, efisiensi.' }, canopyStar: { name: 'Elegant Seal', cn: '華蓋', rule: { '寅': '戌', '午': '戌', '戌': '戌', '亥': '未', '卯': '未', '未': '未', '申': '辰', '子': '辰', '辰': '辰', '巳': '丑', '酉': '丑', '丑': '丑' }, basedOn: 'dayOrYearBranch', type: 'neutral', desc: 'Spiritualitas, seni, filsafat, intuisi, terkadang kesepian.' }, lonesomeStar: { name: 'Bintang Kesepian', cn: '孤辰', rule: { '亥': '寅', '子': '寅', '丑': '寅', '寅': '巳', '卯': '巳', '辰': '巳', '巳': '申', '午': '申', '未': '申', '申': '亥', '酉': '亥', '戌': '亥' }, basedOn: 'yearBranch', type: 'bad', desc: 'Cenderung mandiri, menyendiri (terutama untuk pria).' }, solitudeStar: { name: 'Bintang Janda', cn: '寡宿', rule: { '亥': '戌', '子': '戌', '丑': '戌', '寅': '丑', '卯': '丑', '辰': '丑', '巳': '辰', '午': '辰', '未': '辰', '申': '未', '酉': '未', '戌': '未' }, basedOn: 'yearBranch', type: 'bad', desc: 'Cenderung mandiri, protektif (terutama untuk wanita).' }, grandDuke: { name: 'Grand Duke', cn: '太歲', rule: { '子': '子', '丑': '丑', '寅': '寅', '卯': '卯', '辰': '辰', '巳': '巳', '午': '午', '未': '未', '申': '申', '酉': '酉', '戌': '戌', '亥': '亥' }, basedOn: 'yearBranch', type: 'bad', desc: 'Fokus utama tahun itu, bisa menjadi tekanan atau dukungan.' }, sicknessStar: { name: 'Sickness', cn: '病符', rule: { '子': '亥', '丑': '子', '寅': '丑', '卯': '寅', '辰': '卯', '巳': '辰', '午': '巳', '未': '午', '申': '未', '酉': '申', '戌': '酉', '亥': '戌' }, basedOn: 'yearBranch', type: 'bad', desc: 'Potensi masalah kesehatan atau energi lemah.' }, flyingBlade: { name: 'Flying Blade', cn: '飛刃', rule: { '甲': '酉', '乙': '戌', '丙': '子', '丁': '亥', '戊': '子', '己': '丑', '庚': '卯', '辛': '寅', '壬': '午', '癸': '巳' }, basedOn: 'dayStem', type: 'bad', desc: 'Potensi cedera, persaingan, atau kejadian tiba-tiba.' }, cascadingClouds: { name: 'Cascading Clouds', cn: '流霞', rule: { '甲': '酉', '乙': '戌', '丙': '未', '丁': '申', '戊': '巳', '己': '午', '庚': '辰', '辛': '卯', '壬': '亥', '癸': '寅' }, basedOn: 'dayStem', type: 'bad', desc: 'Potensi kecelakaan atau masalah hukum.' }, fiveGhost: { name: 'Five Ghost', cn: '五鬼', rule: { '子': '辰', '丑': '巳', '寅': '午', '卯': '未', '辰': '申', '巳': '酉', '午': '戌', '未': '亥', '申': '子', '酉': '丑', '戌': '寅', '亥': '卯' }, basedOn: 'yearBranch', type: 'bad', desc: 'Gosip, kesalahpahaman, masalah kecil mengganggu.' } };
-        const dom = { birthDayInput: document.getElementById('birth-day'), birthMonthInput: document.getElementById('birth-month'), birthYearInput: document.getElementById('birth-year'), birthHourInput: document.getElementById('birth-hour'), birthMinuteInput: document.getElementById('birth-minute'), genderInput: document.getElementById('gender'), calculateBtn: document.getElementById('calculate-bazi-btn'), resetAllBtn: document.getElementById('reset-all-btn'), resultDiv: document.getElementById('bazi-chart-result'), luckPillarResult: document.getElementById('luck-pillar-result'), mingGuaBazhaiResult: document.getElementById('ming-gua-bazhai-result'), unknownBirthHourCheckbox: document.getElementById('unknown-birth-hour-checkbox'), analysisResultDiv: document.getElementById('element-strength-analysis'), scenarioAnalysisResultDiv: document.getElementById('scenario-analysis-result'), tenGodsAnalysisDiv: document.getElementById('ten-gods-strength-analysis') };
+        
+        const dom = { birthDayInput: document.getElementById('birth-day'), birthMonthInput: document.getElementById('birth-month'), birthYearInput: document.getElementById('birth-year'), birthHourInput: document.getElementById('birth-hour'), birthMinuteInput: document.getElementById('birth-minute'), genderInput: document.getElementById('gender'), calculateBtn: document.getElementById('calculate-bazi-btn'), resetAllBtn: document.getElementById('reset-all-btn'), resultDiv: document.getElementById('bazi-chart-result'), luckPillarResult: document.getElementById('luck-pillar-result'), mingGuaBazhaiResult: document.getElementById('ming-gua-bazhai-result'), unknownBirthHourCheckbox: document.getElementById('unknown-birth-hour-checkbox'), analysisResultDiv: document.getElementById('element-strength-analysis'), scenarioAnalysisResultDiv: document.getElementById('scenario-analysis-result'), tenGodsAnalysisDiv: document.getElementById('ten-gods-strength-analysis'), dynamicAnalysisResultDiv: document.getElementById('dynamic-analysis-result') };
+        
+        // --- GLOBAL STATE ---
         let natalChartPillars = [];
         let activeKongWang = [];
-        
+        let originalBaziVerdict = null;
+        let original10GodsVerdict = null;
+
         // --- CORE BAZI CALCULATION FUNCTIONS ---
         function getQiStage(dayMaster, branchIndex) {
             const dayMasterKey = `${dayMaster.polarity} ${dayMaster.element}`;
@@ -132,7 +153,8 @@
             dom.mingGuaBazhaiResult.innerHTML = "";
             dom.analysisResultDiv.innerHTML = "";
             dom.scenarioAnalysisResultDiv.innerHTML = "";
-            if (dom.tenGodsAnalysisDiv) dom.tenGodsAnalysisDiv.innerHTML = "";
+            dom.tenGodsAnalysisDiv.innerHTML = "";
+            dom.dynamicAnalysisResultDiv.innerHTML = "";
 
             const year = parseInt(dom.birthYearInput.value);
             const month = parseInt(dom.birthMonthInput.value);
@@ -219,6 +241,7 @@
         }
 
         function get10God(dayMasterIndex, targetStemIndex) {
+            if(dayMasterIndex === null || targetStemIndex === null) return { name: "Unknown", cn: "?", abbr: "?" };
             const dayMaster = heavenlyStemsData[dayMasterIndex];
             const targetStem = heavenlyStemsData[targetStemIndex];
             if (dayMaster.char === targetStem.char) return tenGods.F;
@@ -255,8 +278,8 @@
 
         function calculateKongWang(dayGanzhiIndex) {
             const decade = Math.floor(dayGanzhiIndex / 10);
-            const voidMap = [['Xu', 'Hai'], ['Shen', 'You'], ['Wu', 'Wei'], ['Chen', 'Si'], ['Yin', 'Mao'], ['Zi', 'Chou']];
-            return voidMap[decade];
+            const voidMap = [['戌', '亥'], ['申', '酉'], ['午', '未'], ['辰', '巳'], ['寅', '卯'], ['子', '丑']];
+            return voidMap[decade].map(char => earthlyBranchesData.find(b=>b.char === char).pinyin);
         }
 
         function getApplicableShenSha(natalPillars) {
@@ -356,19 +379,22 @@
             return false;
         }
         
-        // --- NEW: SCENARIO & HYPOTHESIS ENGINE ---
+        // --- SCENARIO & HYPOTHESIS ENGINE ---
         function analyzeBazi(pillars) {
             const knownPillars = pillars.filter(p => !p.isUnknown);
             if (knownPillars.length === 0) return;
             
-            analyze10GodsStrength(knownPillars);
+            original10GodsVerdict = analyze10GodsStrength(knownPillars);
+            display10GodsAnalysis(original10GodsVerdict);
 
             if (knownPillars.length < 4) {
                 const baseVerdict = runFullStrengthAnalysis(knownPillars, []);
+                originalBaziVerdict = baseVerdict;
                 displayStrengthAnalysis(baseVerdict, true);
                 generateAndDisplayScenarios(knownPillars, baseVerdict);
             } else {
                 const finalVerdict = runFullStrengthAnalysis(knownPillars, []);
+                originalBaziVerdict = finalVerdict;
                 displayStrengthAnalysis(finalVerdict, false);
             }
         }
@@ -409,10 +435,7 @@
                 const hourPillar = {
                     title: "HOUR", title_cn: "時", stemIndex: hStem, branchIndex: hBranch, isUnknown: false,
                     stem: heavenlyStemsData[hStem], branch: earthlyBranchesData[hBranch],
-                    hidden: {
-                        mainQi: earthlyBranchesData[hBranch].hidden.mainQi,
-                        otherQi: earthlyBranchesData[hBranch].hidden.otherQi
-                    }
+                    hidden: { main: null, others: [] } // Simplified for this check
                 };
                 
                 let hypotheticalPillars = [hourPillar, ...basePillars];
@@ -471,7 +494,7 @@
             const monthBranch = earthlyBranchesData[monthPillar.branchIndex];
             const seasonElement = getSeasonElement(monthBranch.pinyin);
             scores[seasonElement] += scoreWeights.SEASON;
-            notes.push(`Lahir di musim ${seasonElement}, memberi +${scoreWeights.SEASON} poin.`);
+            if(notes) notes.push(`Lahir di musim ${seasonElement}, memberi +${scoreWeights.SEASON} poin.`);
             pillars.forEach(p => {
                 if (p.isUnknown) return;
                 const branch = p.branch;
@@ -479,17 +502,17 @@
                 allHiddenStems.forEach(hsIndex => {
                     const hiddenStem = heavenlyStemsData[hsIndex];
                     let scoreToAdd = (hsIndex === branch.hidden.mainQi) ? 15 : 10;
-                    if (p.title === 'MONTH' || p.title === 'DAY') { scoreToAdd += 5; }
+                    if (['MONTH', 'DAY', 'LUCK', 'ANNUAL', 'MONTHLY'].includes(p.title)) { scoreToAdd += 5; }
                     scores[hiddenStem.element] += scoreToAdd;
-                    notes.push(`Kekuatan dari ${branch.pinyin} (${hiddenStem.char}) memberi +${scoreToAdd} poin ke ${hiddenStem.element}.`);
+                    if(notes) notes.push(`Kekuatan dari ${branch.pinyin} (${hiddenStem.char}) memberi +${scoreToAdd} poin ke ${hiddenStem.element}.`);
                 });
             });
             pillars.forEach(p => {
-                if (p.isUnknown) return;
+                if (p.isUnknown || p.title === 'DAY') return;
                 const stem = p.stem;
                 const scoreToAdd = hasRoot(stem.stemIndex, pillars) ? scoreWeights.STEM_SUPPORT : scoreWeights.UNROOTED_STEM;
                 scores[stem.element] += scoreToAdd;
-                notes.push(`Batang Langit ${stem.char} (${hasRoot(stem.stemIndex, pillars) ? 'berakar' : 'tanpa akar'}) memberi +${scoreToAdd} poin ke ${stem.element}.`);
+                if(notes) notes.push(`Batang Langit ${stem.char} (${hasRoot(stem.stemIndex, pillars) ? 'berakar' : 'tanpa akar'}) memberi +${scoreToAdd} poin ke ${stem.element}.`);
             });
             return scores;
         }
@@ -515,7 +538,7 @@
                         if (seasonEl !== 'Water') {
                             scores[s1.element] -= scoreWeights.STEM_COMBO_FAIL;
                             scores[s2.element] -= scoreWeights.STEM_COMBO_FAIL;
-                            notes.push(`Kombinasi ${s1.char}+${s2.char} gagal transformasi (bukan musim Air), mengurangi kekuatan keduanya.`);
+                            if(notes) notes.push(`Kombinasi ${s1.char}+${s2.char} gagal transformasi (bukan musim Air), mengurangi kekuatan keduanya.`);
                         }
                     }
                 }
@@ -523,12 +546,12 @@
             const branchChars = pillars.map(p => p.branch.char);
             if (branchChars.includes('卯') && branchChars.includes('未')) {
                 scores['Wood'] += scoreWeights.HALF_3_HARMONY;
-                notes.push(`Kombinasi 卯+未 (Setengah Harmoni Kayu) memberi +${scoreWeights.HALF_3_HARMONY} poin ke Kayu.`);
+                if(notes) notes.push(`Kombinasi 卯+未 (Setengah Harmoni Kayu) memberi +${scoreWeights.HALF_3_HARMONY} poin ke Kayu.`);
             }
             if (branchChars.includes('子') && branchChars.includes('卯')) {
                 scores['Water'] -= scoreWeights.PUNISHMENT;
                 scores['Wood'] -= scoreWeights.PUNISHMENT;
-                notes.push(`Punishment 子+卯 mengurangi kekuatan Air dan Kayu.`);
+                if(notes) notes.push(`Punishment 子+卯 mengurangi kekuatan Air dan Kayu.`);
             }
             return scores;
         }
@@ -545,7 +568,7 @@
                     const transformedElement = combos[combo];
                     const seasonElement = getSeasonElement(monthPillar.branch.pinyin);
                     if (transformedElement === seasonElement) {
-                        notes.push(`Bagan terdeteksi sebagai Bagan Transformasi ${transformedElement} (Hua Qi Ge).`);
+                        if(notes) notes.push(`Bagan terdeteksi sebagai Bagan Transformasi ${transformedElement} (Hua Qi Ge).`);
                         return { isSpecial: true, type: `Transformasi ${transformedElement}`, favorable: [transformedElement, elementCycle[(elementCycle.indexOf(transformedElement) + 4) % 5]] };
                     }
                 }
@@ -563,14 +586,14 @@
             const dominantNames = { Wood: "Dominan Kayu (Qu Zhi Ge)", Fire: "Dominan Api (Yan Shang Ge)", Earth: "Dominan Tanah (Jia Se Ge)", Metal: "Dominan Logam (Cong Ge Ge)", Water: "Dominan Air (Run Xia Ge)" };
             const followNames = { Output: "Mengikuti Ekspresi (Cong Er Ge)", Wealth: "Mengikuti Harta (Cong Cai Ge)", Officer: "Mengikuti Kekuasaan (Cong Sha Ge)" };
             if (supportingPercentage >= 70) {
-                notes.push('Bagan berpotensi Bagan Dominan.');
+                if(notes) notes.push('Bagan berpotensi Bagan Dominan.');
                 return { isSpecial: true, type: dominantNames[dmElement], favorable: [dmElement, resourceElement, elementCycle[(elementCycle.indexOf(dmElement) + 1) % 5]] };
             }
             if (supportingPercentage <= 20) {
                 const drainingScores = { Output: scores[elementCycle[(elementCycle.indexOf(dmElement) + 1) % 5]], Wealth: scores[elementCycle[(elementCycle.indexOf(dmElement) + 2) % 5]], Officer: scores[elementCycle[(elementCycle.indexOf(dmElement) + 3) % 5]] };
                 const dominantDraining = Object.keys(drainingScores).reduce((a, b) => drainingScores[a] > drainingScores[b] ? a : b);
                 if (drainingScores[dominantDraining] / totalScore * 100 >= 50) {
-                    notes.push(`Bagan berpotensi ${followNames[dominantDraining]}.`);
+                    if(notes) notes.push(`Bagan berpotensi ${followNames[dominantDraining]}.`);
                     const followedElement = elementCycle[(elementCycle.indexOf(dmElement) + { Output: 1, Wealth: 2, Officer: 3 }[dominantDraining]) % 5];
                     return { isSpecial: true, type: followNames[dominantDraining], favorable: [followedElement, elementCycle[(elementCycle.indexOf(followedElement) + 4) % 5]] };
                 }
@@ -594,7 +617,7 @@
                     if (p.isUnknown) continue;
                     if (contaminantElements.includes(p.stem.element) && hasRoot(p.stem.stemIndex, pillars)) {
                         isPseudo = true;
-                        notes.push(`Struktur menjadi Pseudo karena adanya elemen pengotor ${p.stem.element} (${p.stem.char}) yang berakar.`);
+                        if(notes) notes.push(`Struktur menjadi Pseudo karena adanya elemen pengotor ${p.stem.element} (${p.stem.char}) yang berakar.`);
                         break;
                     }
                 }
@@ -625,10 +648,8 @@
 
         function analyze10GodsStrength(pillars) {
             const knownPillars = pillars.filter(p => !p.isUnknown);
-            if (knownPillars.length < 3) {
-                if (dom.tenGodsAnalysisDiv) dom.tenGodsAnalysisDiv.innerHTML = "";
-                return;
-            };
+            if (knownPillars.length === 0) return null;
+
             let godScores = { F: 0, RW: 0, EG: 0, HO: 0, DW: 0, IW: 0, DO: 0, '7K': 0, DR: 0, IR: 0 };
             const dm = knownPillars.find(p => p.title === 'DAY');
             const monthPillar = knownPillars.find(p => p.title === 'MONTH');
@@ -650,12 +671,142 @@
                         godScores[god] += score;
                     } else {
                         if (!monthPillar || !monthPillar.hidden.main || hidden.god.abbr !== monthPillar.hidden.main.god.abbr) {
-                            godScores[hidden.god.abbr] += (p.title === 'MONTH' || p.title === 'DAY') ? 15 : 10;
+                            godScores[hidden.god.abbr] += (['MONTH', 'DAY', 'LUCK', 'ANNUAL', 'MONTHLY'].includes(p.title)) ? 15 : 10;
                         }
                     }
                 });
             });
-            display10GodsAnalysis({ scores: godScores });
+            return { scores: godScores, totalScore: Object.values(godScores).reduce((a,b)=>a+b, 0) };
+        }
+
+        // --- DYNAMIC ANALYSIS ENGINE ---
+        function runDynamicAnalysis(pillarsToAdd, analysisTitle) {
+            if (!originalBaziVerdict || !original10GodsVerdict) return;
+
+            const hypotheticalPillars = [...natalChartPillars, ...pillarsToAdd];
+
+            const interactionNotes = generateInteractionNotes(natalChartPillars, pillarsToAdd);
+            
+            const dynamicElementVerdict = runFullStrengthAnalysis(hypotheticalPillars, []);
+            const dynamic10GodsVerdict = analyze10GodsStrength(hypotheticalPillars);
+
+            if (!dynamicElementVerdict || !dynamic10GodsVerdict) {
+                dom.dynamicAnalysisResultDiv.innerHTML = `<div class="text-center p-4 bg-rose-50 text-rose-700 rounded-lg">Gagal melakukan analisis dinamis.</div>`;
+                return;
+            }
+
+            dynamicElementVerdict.notes = [...interactionNotes, '---', ...dynamicElementVerdict.notes];
+            
+            displayDynamicAnalysis(originalBaziVerdict, dynamicElementVerdict, original10GodsVerdict, dynamic10GodsVerdict, pillarsToAdd, analysisTitle);
+        }
+
+        function generateInteractionNotes(basePillars, incomingPillars) {
+            let notes = [];
+            let currentPillars = [...basePillars];
+
+            incomingPillars.forEach((incomingPillar, index) => {
+                notes.push(`<b>--- Interaksi Pilar ${incomingPillar.title} (${incomingPillar.stem.char}${incomingPillar.branch.char}) ---</b>`);
+                
+                const combinedPillars = [...currentPillars, incomingPillar];
+                
+                // Fan Yin / Fu Yin
+                ['DAY', 'YEAR', 'MONTH', 'HOUR'].forEach(pillarTitle => {
+                    const natalPillar = basePillars.find(p => p.title === pillarTitle);
+                    if (!natalPillar || natalPillar.isUnknown) return;
+
+                    const stemClashMap = {'甲':'庚', '庚':'甲', '乙':'辛', '辛':'乙', '丙':'壬', '壬':'丙', '丁':'癸', '癸':'丁'};
+                    const branchClashMap = {'子':'午', '午':'子', '丑':'未', '未':'丑', '寅':'申', '申':'寅', '卯':'酉', '酉':'卯', '辰':'戌', '戌':'辰', '巳':'亥', '亥':'巳'};
+                    
+                    if (stemClashMap[incomingPillar.stem.char] === natalPillar.stem.char && branchClashMap[incomingPillar.branch.char] === natalPillar.branch.char) {
+                        notes.push(`🚨 <b>Fan Yin (Anti-Pillar)</b> dengan pilar ${pillarTitle} natal. Potensi perubahan besar, guncangan, atau kejadian tak terduga terkait pilar ${pillarTitle}.`);
+                    }
+                    if (incomingPillar.stem.char === natalPillar.stem.char && incomingPillar.branch.char === natalPillar.branch.char) {
+                        notes.push(`😢 <b>Fu Yin (Pillar Ganda)</b> dengan pilar ${pillarTitle} natal. Potensi stagnasi, kesedihan, atau pengulangan kejadian terkait pilar ${pillarTitle}.`);
+                    }
+                });
+
+                // Stem Combinations & Clashes
+                combinedPillars.slice(0, -1).forEach(p => {
+                    const stemComboMap = { '甲己': 'Earth', '乙庚': 'Metal', '丙辛': 'Water', '丁壬': 'Wood', '戊癸': 'Fire' };
+                    const stemClashMap = {'甲':'庚', '庚':'甲', '乙':'辛', '辛':'乙', '丙':'壬', '壬':'丙', '丁':'癸', '癸':'丁'};
+                    
+                    const pair = [incomingPillar.stem.char, p.stem.char].sort().join('');
+                    if (stemComboMap[pair]) {
+                         notes.push(`🤝 <b>Kombinasi Langit:</b> ${incomingPillar.stem.char} (${incomingPillar.title}) + ${p.stem.char} (${p.title}). Bisa mengunci atau mengubah elemen.`);
+                    }
+                    if (stemClashMap[incomingPillar.stem.char] === p.stem.char) {
+                        notes.push(`⚔️ <b>Bentrokan Langit:</b> ${incomingPillar.stem.char} (${incomingPillar.title}) vs ${p.stem.char} (${p.title}). Potensi konflik, perubahan mendadak.`);
+                    }
+                });
+
+                // Branch Interactions
+                const allBranchChars = combinedPillars.map(p => p.branch.char);
+                const checkBranchInteraction = (map, type, message) => {
+                    if (map[incomingPillar.branch.char] && allBranchChars.includes(map[incomingPillar.branch.char])) {
+                        const partner = map[incomingPillar.branch.char];
+                        const partnerPillar = combinedPillars.find(p => p.branch.char === partner);
+                        notes.push(`${type} <b>${message}:</b> ${incomingPillar.branch.char} (${incomingPillar.title}) + ${partner} (${partnerPillar.title}).`);
+                    }
+                };
+                
+                checkBranchInteraction({'子':'丑', '丑':'子', '寅':'亥', '亥':'寅', '卯':'戌', '戌':'卯', '辰':'酉', '酉':'辰', '巳':'申', '申':'巳', '午':'未', '未':'午'}, '💞', '6 Harmoni');
+                checkBranchInteraction({'子':'午', '午':'子', '丑':'未', '未':'丑', '寅':'申', '申':'寅', '卯':'酉', '酉':'卯', '辰':'戌', '戌':'辰', '巳':'亥', '亥':'巳'}, '💥', 'Bentrokan Bumi');
+                checkBranchInteraction({'子':'未', '未':'子', '丑':'午', '午':'丑', '寅':'巳', '巳':'寅', '卯':'辰', '辰':'卯', '申':'亥', '亥':'申', '酉':'戌', '戌':'酉'}, '🔪', 'Harm (Hai)');
+                checkBranchInteraction({'子':'酉', '酉':'子', '卯':'午', '午':'卯', '辰':'丑', '丑':'辰', '未':'戌', '戌':'未', '申':'巳', '巳':'申', '寅':'亥', '亥':'寅'}, '💣', 'Destruction (Po)');
+
+                // 3-Harmony & Directional
+                const threeHarmony = { '申子辰': { el: 'Water', members: ['申','子','辰'] }, '亥卯未': { el: 'Wood', members: ['亥','卯','未'] }, '寅午戌': { el: 'Fire', members: ['寅','午','戌'] }, '巳酉丑': { el: 'Metal', members: ['巳','酉','丑'] } };
+                const directional = { '寅卯辰': { el: 'Wood', members: ['寅','卯','辰'] }, '巳午未': { el: 'Fire', members: ['巳','午','未'] }, '申酉戌': { el: 'Metal', members: ['申','酉','戌'] }, '亥子丑': { el: 'Water', members: ['亥','子','丑'] } };
+                [threeHarmony, directional].forEach(comboSet => {
+                    for (const key in comboSet) {
+                        const { el, members } = comboSet[key];
+                        const presentMembers = members.filter(m => allBranchChars.includes(m));
+                        if (presentMembers.length === 3 && presentMembers.includes(incomingPillar.branch.char)) {
+                            notes.push(`🚀 <b>Kombinasi Penuh ${key} → ${el}</b> terbentuk.`);
+                        } else if (presentMembers.length === 2 && presentMembers.includes(incomingPillar.branch.char)) {
+                            notes.push(`✨ <b>Kombinasi Parsial ${key} → ${el}</b> terbentuk.`);
+                        }
+                    }
+                });
+
+                // Punishments
+                const checkPunishment = (members, name) => {
+                    if (members.every(m => allBranchChars.includes(m)) && members.includes(incomingPillar.branch.char)) {
+                        notes.push(`💢 <b>${name} Punishment:</b> ${members.join('-')} aktif. Potensi masalah tersembunyi, hukum, atau kesehatan.`);
+                    }
+                };
+                checkPunishment(['寅', '巳', '申'], 'Ungrateful');
+                checkPunishment(['丑', '戌', '未'], 'Bullying');
+                if (allBranchChars.filter(c => c === '子').length > 0 && allBranchChars.filter(c => c === '卯').length > 0 && ['子','卯'].includes(incomingPillar.branch.char)) {
+                     notes.push(`💢 <b>Uncivilized Punishment:</b> 子-卯 aktif. Potensi masalah hubungan, tidak sopan.`);
+                }
+                const selfPunish = ['辰', '午', '酉', '亥'];
+                if (selfPunish.includes(incomingPillar.branch.char) && allBranchChars.filter(c => c === incomingPillar.branch.char).length > 1) {
+                    notes.push(`⛓️ <b>Self-Punishment:</b> ${incomingPillar.branch.char}-${incomingPillar.branch.char} aktif. Potensi sabotase diri, frustrasi.`);
+                }
+                
+                // Tou Gan / Tong Gen / Mu Ku
+                const incomingStem = incomingPillar.stem;
+                if (hasRoot(incomingStem.stemIndex, basePillars)) {
+                    notes.push(`🌱 <b>Tong Gen (Akar Sama):</b> Stem ${incomingPillar.title} <b>${incomingStem.char}</b> (${incomingStem.god.abbr}) menemukan akarnya di bagan Natal/Dayun.`);
+                }
+                basePillars.forEach(p => {
+                    if(p.isUnknown) return;
+                    const allHidden = [p.hidden.main, ...p.hidden.others].filter(Boolean);
+                    allHidden.forEach(hs => {
+                        if (hs.char === incomingStem.char) {
+                            notes.push(`🚀 <b>Tou Gan (Stem Muncul):</b> Hidden Stem <b>${hs.char}</b> (${hs.god.abbr}) dari pilar ${p.title} muncul di ${incomingPillar.title}.`);
+                        }
+                    });
+                });
+                const tombMap = { 'Wood': '未', 'Fire': '戌', 'Metal': '丑', 'Water': '辰', 'Earth': '辰' };
+                if (tombMap[incomingStem.element] && allBranchChars.includes(tombMap[incomingStem.element])) {
+                    notes.push(`🪦 <b>Mu Ku (Masuk Makam):</b> Stem ${incomingPillar.title} <b>${incomingStem.char}</b> masuk ke makam/gudang <b>${tombMap[incomingStem.element]}</b>. Bisa berarti terkunci atau tersimpan.`);
+                }
+
+                currentPillars.push(incomingPillar);
+            });
+            return notes;
         }
 
         // --- UI & DISPLAY FUNCTIONS ---
@@ -694,7 +845,7 @@
                 return;
             }
             const elementColors = { Wood: 'bg-green-500', Fire: 'bg-red-500', Earth: 'bg-yellow-500', Metal: 'bg-gray-400', Water: 'bg-blue-500' };
-            const title = isHypothesis ? "Analisis Kekuatan 5 Elemen (Hipotesis 3 Pilar)" : "Analisis Kekuatan 5 Elemen";
+            const title = isHypothesis ? "Analisis Kekuatan 5 Elemen (Hipotesis 3 Pilar)" : "Analisis Kekuatan 5 Elemen (Bawaan Lahir)";
             let scoreBarsHtml = elementCycle.map(el => {
                 const score = result.scores[el] || 0;
                 const percentage = result.totalScore > 0 ? (score / result.totalScore * 100).toFixed(1) : 0;
@@ -707,7 +858,8 @@
 
         function display10GodsAnalysis(result) {
             const container = dom.tenGodsAnalysisDiv;
-            const totalScore = Object.values(result.scores).reduce((a, b) => a + b, 0);
+            if(!result) { container.innerHTML = ""; return; }
+            const totalScore = result.totalScore;
             const isThreePillars = natalChartPillars.filter(p => !p.isUnknown).length < 4;
             let sortedGods = Object.entries(result.scores).sort(([, a], [, b]) => b - a);
             let scoreBarsHtml = sortedGods.map(([abbr, score]) => {
@@ -715,9 +867,109 @@
                 const godInfo = tenGods[abbr];
                 return `<div class="mb-3"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-slate-700">${godInfo.name} (${abbr})</span><span class="text-sm font-medium text-slate-500">${Math.round(score)} poin (${percentage}%)</span></div><div class="strength-bar-container"><div class="strength-bar bg-sky-500" style="width: ${percentage}%;"></div></div></div>`;
             }).join('');
-            let html = `<div class="bg-white border border-slate-200 rounded-xl shadow-lg p-6"><h3 class="text-2xl font-bold text-slate-800 mb-2 text-center">Peta Kekuatan 10 Dewa (Gods)</h3>${isThreePillars ? '<p class="text-center text-sm text-amber-600 mb-4">(Analisis berdasarkan 3 Pilar karena jam lahir tidak diketahui)</p>' : ''}<div>${scoreBarsHtml}</div></div>`;
+            let html = `<div class="bg-white border border-slate-200 rounded-xl shadow-lg p-6"><h3 class="text-2xl font-bold text-slate-800 mb-2 text-center">Peta Kekuatan 10 Dewa (Bawaan Lahir)</h3>${isThreePillars ? '<p class="text-center text-sm text-amber-600 mb-4">(Analisis berdasarkan 3 Pilar karena jam lahir tidak diketahui)</p>' : ''}<div>${scoreBarsHtml}</div></div>`;
             container.innerHTML = html;
         }
+        
+        function displayDynamicAnalysis(originalEl, newEl, originalGod, newGod, activePillars, analysisTitle) {
+            const container = dom.dynamicAnalysisResultDiv;
+            const elementColors = { Wood: 'bg-green-500', Fire: 'bg-red-500', Earth: 'bg-yellow-500', Metal: 'bg-gray-400', Water: 'bg-blue-500' };
+            
+            const renderComparisonBar = (name, origScore, newScore, origTotal, newTotal, colorClass) => {
+                const origPercent = origTotal > 0 ? (origScore / origTotal * 100) : 0;
+                const newPercent = newTotal > 0 ? (newScore / newTotal * 100) : 0;
+                const change = newPercent - origPercent;
+                let indicator = '';
+                if (change > 0.1) indicator = `<span class="change-indicator up">▲ ${change.toFixed(1)}%</span>`;
+                if (change < -0.1) indicator = `<span class="change-indicator down">▼ ${Math.abs(change).toFixed(1)}%</span>`;
+
+                return `
+                    <div class="mb-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-semibold text-slate-700">${name}</span>
+                            <div>
+                                <span class="text-sm font-medium text-slate-500">${newPercent.toFixed(1)}%</span>
+                                ${indicator}
+                            </div>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div class="strength-bar ${colorClass}" style="width: ${newPercent}%;"></div>
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1">Sebelumnya: ${origPercent.toFixed(1)}%</div>
+                    </div>
+                `;
+            };
+
+            let elementBarsHtml = elementCycle.map(el => {
+                return renderComparisonBar(el, originalEl.scores[el], newEl.scores[el], originalEl.totalScore, newEl.totalScore, elementColors[el]);
+            }).join('');
+
+            let sortedGods = Object.keys(tenGods).sort((a, b) => newGod.scores[b] - newGod.scores[a]);
+            let godBarsHtml = sortedGods.map(abbr => {
+                const godInfo = tenGods[abbr];
+                return renderComparisonBar(`${godInfo.name} (${abbr})`, originalGod.scores[abbr], newGod.scores[abbr], originalGod.totalScore, newGod.totalScore, 'bg-sky-500');
+            }).join('');
+
+            const activePillarsHtml = activePillars.map(p => `
+                <div class="flex flex-col items-center p-3 bg-slate-100 rounded-lg border border-slate-200">
+                    <p class="font-bold text-sm text-slate-700">Pilar ${p.title}</p>
+                    <p class="hanzi !text-3xl my-1">${p.stem.char}${p.branch.char}</p>
+                    <p class="font-semibold text-xs">${p.stem.pinyin} ${p.branch.pinyin}</p>
+                </div>
+            `).join('');
+            
+            const verdictChangeHtml = `
+            <div class="mt-4 bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+                <h4 class="font-bold text-slate-800 mb-3">Perubahan Status & Elemen Kunci</h4>
+                <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                    <div class="font-semibold text-slate-500">Sebelumnya:</div>
+                    <div class="font-bold text-slate-800">${originalEl.dmStatus}</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="font-semibold text-emerald-600">Status Baru:</div>
+                    <div class="font-bold text-emerald-700">${newEl.dmStatus}</div>
+                </div>
+                <hr class="my-3">
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 mb-1">Elemen Baik Baru:</p>
+                    <p class="font-bold text-emerald-700">${newEl.favorableElements.join(', ')}</p>
+                </div>
+                <div class="mt-2">
+                    <p class="text-xs font-semibold text-slate-500 mb-1">Elemen Buruk Baru:</p>
+                    <p class="font-bold text-rose-700">${newEl.unfavorableElements.join(', ')}</p>
+                </div>
+            </div>
+            `;
+
+            let html = `
+            <div class="bg-white border border-slate-200 rounded-xl shadow-lg p-6">
+                <h3 class="text-2xl font-bold text-slate-800 mb-4 text-center">${analysisTitle}</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <div class="grid grid-cols-1 md:grid-cols-${activePillars.length > 1 ? '2' : '1'} lg:grid-cols-${activePillars.length} gap-2">${activePillarsHtml}</div>
+                        ${verdictChangeHtml} 
+                        <div class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                            <h4 class="font-bold text-amber-800 mb-2">Log Interaksi Kunci:</h4>
+                            <ul class="space-y-2">
+                                ${newEl.notes.map(n => `<li class="interaction-log-item">${n.replace(/---/g, '<hr class="my-2 border-amber-200">')}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-800 mb-3 text-center">Perubahan Kekuatan 5 Elemen</h4>
+                            ${elementBarsHtml}
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-800 mb-3 text-center">Perubahan Kekuatan 10 Dewa</h4>
+                            ${godBarsHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.innerHTML = html;
+        }
+
 
         function displayLuckPillars(luckPillarData, natalPillars, birthYear) {
             const container = dom.luckPillarResult;
@@ -772,17 +1024,25 @@
                 yearStemIndex = parseInt(liuNianCard.dataset.stemIndex);
             const firstMonthStemIndexMap = { 0: 2, 1: 4, 2: 6, 3: 8, 4: 0, 5: 2, 6: 4, 7: 6, 8: 8, 9: 0 };
             let currentMonthStemIndex = firstMonthStemIndexMap[yearStemIndex],
-                currentMonthBranchIndex = 2;
+                currentMonthBranchIndex = 2; // Bazi month starts with Yin (index 2)
             const monthNames = ["Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan"];
+            const currentJsMonth = new Date().getMonth();
+            const currentFullYear = new Date().getFullYear();
             const baziMonthToJsMonth = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0];
+
             let cardsHtml = '';
             for (let i = 0; i < 12; i++) {
-                const stem = heavenlyStemsData[currentMonthStemIndex],
-                    branch = earthlyBranchesData[currentMonthBranchIndex],
-                    isVoid = activeKongWang.includes(branch.pinyin),
-                    hiddenStemsHtml = renderCardHiddenStems(currentMonthBranchIndex, dayMasterIndex, true),
-                    god = get10God(dayMasterIndex, currentMonthStemIndex);
-                cardsHtml += `<div class="liuyue-card relative bg-white rounded-lg border border-slate-200 text-center w-32 flex-shrink-0 flex flex-col overflow-hidden cursor-pointer hover:border-emerald-500 transition-all" data-month-index="${baziMonthToJsMonth[i]}" data-month-name="${monthNames[i]}"><p class="font-semibold text-sm bg-slate-100 py-1 w-full">${monthNames[i]}</p><div class="pt-2 pb-1 flex-grow"><p class="hanzi !text-2xl">${stem.char}</p><p class="text-xs">${stem.pinyin}</p><p class="text-[10px] font-bold element-color-${stem.element} rounded-full w-5 h-5 mx-auto mt-1 flex items-center justify-center">${god.abbr}</p></div><hr class="w-full border-slate-200"/><div class="pt-1 pb-2 flex-grow"><p class="hanzi !text-2xl">${branch.char}</p><p class="text-xs">${branch.pinyin}</p>${hiddenStemsHtml}</div> ${isVoid ? '<span class="kong-wang-indicator">DE</span>' : ''} </div>`;
+                const stem = heavenlyStemsData[currentMonthStemIndex];
+                const branch = earthlyBranchesData[currentMonthBranchIndex];
+                const isVoid = activeKongWang.includes(branch.pinyin);
+                const hiddenStemsHtml = renderCardHiddenStems(currentMonthBranchIndex, dayMasterIndex, true);
+                const god = get10God(dayMasterIndex, currentMonthStemIndex);
+                
+                const isCurrent = (year === currentFullYear && baziMonthToJsMonth[i] === currentJsMonth);
+                const currentClass = isCurrent ? 'current' : '';
+
+                cardsHtml += `<div class="liuyue-card relative bg-white rounded-lg border border-slate-200 text-center w-32 flex-shrink-0 flex flex-col overflow-hidden cursor-pointer hover:border-indigo-500 transition-all ${currentClass}" data-month-name="${monthNames[i]}" data-stem-index="${currentMonthStemIndex}" data-branch-index="${currentMonthBranchIndex}" data-js-month="${baziMonthToJsMonth[i]}"><p class="font-semibold text-sm bg-slate-100 py-1 w-full">${monthNames[i]}</p><div class="pt-2 pb-1 flex-grow"><p class="hanzi !text-2xl">${stem.char}</p><p class="text-xs">${stem.pinyin}</p><p class="text-[10px] font-bold element-color-${stem.element} rounded-full w-5 h-5 mx-auto mt-1 flex items-center justify-center">${god.abbr}</p></div><hr class="w-full border-slate-200"/><div class="pt-1 pb-2 flex-grow"><p class="hanzi !text-2xl">${branch.char}</p><p class="text-xs">${branch.pinyin}</p>${hiddenStemsHtml}</div> ${isVoid ? '<span class="kong-wang-indicator">DE</span>' : ''} </div>`;
+                
                 currentMonthStemIndex = (currentMonthStemIndex + 1) % 10;
                 currentMonthBranchIndex = (currentMonthBranchIndex + 1) % 12;
             }
@@ -792,18 +1052,27 @@
 
         function displayLiuRi(liuYueCard) {
             const activeLiuNianCard = document.querySelector('.liunian-card.active');
+            if (!activeLiuNianCard) return;
+
             const year = parseInt(activeLiuNianCard.dataset.year);
-            const month = parseInt(liuYueCard.dataset.monthIndex);
+            const month = parseInt(liuYueCard.dataset.jsMonth);
             const dayMasterIndex = natalChartPillars.find(p => p.title === 'DAY').stemIndex;
             const container = document.getElementById('liuri-container');
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            
             let cardsHtml = '';
-            const startDate = new Date(year, month, 1);
-            const endDate = new Date(year, month + 1, solarMonthStartDates[gregorianToSolarOrderMap[(month + 1) % 12]]);
-            for (let d = startDate; d < endDate; d.setDate(d.getDate() + 1)) {
+            
+            // Determine the start and end dates for the Bazi month
+            const startDate = new Date(year, month, solarMonthStartDates[gregorianToSolarOrderMap[month]]);
+            const nextBaziMonthIndex = (gregorianToSolarOrderMap[month] + 1) % 12;
+            const nextBaziMonthJs = [1,2,3,4,5,6,7,8,9,10,11,0][nextBaziMonthIndex];
+            const nextYear = (month === 11) ? year + 1 : year; // Handle January
+            const endDate = new Date(nextYear, nextBaziMonthJs, solarMonthStartDates[nextBaziMonthIndex]);
+
+            for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
                 cardsHtml += createDailyPillarCard(d.getFullYear(), d.getMonth(), d.getDate(), dayMasterIndex);
             }
-            container.innerHTML = `<h4 class="text-lg font-bold text-slate-800 mb-4 text-center">Pilar Harian (流日)</h4><div class="horizontal-scroll-container overflow-x-auto pb-4"><div class="flex space-x-4 min-w-max px-2">${cardsHtml}</div></div>`;
+            
+            container.innerHTML = `<h4 class="text-lg font-bold text-slate-800 mb-4 text-center">Pilar Harian (流日) untuk ${liuYueCard.dataset.monthName} ${year}</h4><div class="horizontal-scroll-container overflow-x-auto pb-4"><div class="flex space-x-3 min-w-max px-2">${cardsHtml}</div></div>`;
         }
 
         function createDailyPillarCard(year, month, day, dayMasterIndex) {
@@ -815,7 +1084,7 @@
             const hiddenStemsHtml = renderCardHiddenStems(dailyPillar.branchIndex, dayMasterIndex, true);
             const monthName = monthNames[month];
             const isVoid = activeKongWang.includes(branch.pinyin);
-            return `<div class="relative bg-white rounded-lg border border-slate-200 text-center w-36 flex-shrink-0 flex flex-col overflow-hidden"><p class="font-bold text-slate-700 bg-slate-100 py-1 w-full">${day} ${monthName}</p><div class="pt-2 pb-1 flex-grow"><p class="hanzi !text-3xl">${stem.char}</p><p class="text-sm">${stem.pinyin}</p><p class="text-xs font-bold element-color-${stem.element} rounded-full w-6 h-6 mx-auto mt-1 flex items-center justify-center">${god.abbr}</p></div><hr class="w-full border-slate-200"/><div class="pt-1 pb-2 flex-grow"><p class="hanzi !text-3xl">${branch.char}</p><p class="text-sm">${branch.pinyin}</p><p class="text-xs text-slate-500">${branch.polarity} ${branch.element}</p></div>${hiddenStemsHtml}${isVoid ? '<span class="kong-wang-indicator">DE</span>' : ''}</div>`;
+            return `<div class="relative bg-white rounded-lg border border-slate-200 text-center w-32 flex-shrink-0 flex flex-col overflow-hidden"><p class="font-bold text-slate-700 bg-slate-100 py-1 w-full text-sm">${day} ${monthName}</p><div class="pt-2 pb-1 flex-grow"><p class="hanzi !text-2xl">${stem.char}</p><p class="text-xs">${stem.pinyin}</p><p class="text-[10px] font-bold element-color-${stem.element} rounded-full w-5 h-5 mx-auto mt-1 flex items-center justify-center">${god.abbr}</p></div><hr class="w-full border-slate-200"/><div class="pt-1 pb-2 flex-grow"><p class="hanzi !text-2xl">${branch.char}</p><p class="text-xs">${branch.pinyin}</p>${hiddenStemsHtml}</div>${isVoid ? '<span class="kong-wang-indicator">DE</span>' : ''}</div>`;
         }
 
         function displayMingGuaBazhai(kuaNumber) {
@@ -907,6 +1176,40 @@
             dom.birthMinuteInput.value = today.getMinutes().toString().padStart(2, '0');
         }
 
+        // --- HELPER FUNCTION ---
+        function createPillarObjectFromCard(cardElement, pillarTitle, pillarTitleCn) {
+            const dayMasterPillar = natalChartPillars.find(p => p.title === 'DAY');
+            if (!dayMasterPillar || dayMasterPillar.isUnknown) return null;
+            const dayMasterIndex = dayMasterPillar.stemIndex;
+            const dayMaster = heavenlyStemsData[dayMasterIndex];
+
+            const stemIndex = parseInt(cardElement.dataset.stemIndex);
+            const branchIndex = parseInt(cardElement.dataset.branchIndex);
+            
+            const stem = heavenlyStemsData[stemIndex];
+            const branch = earthlyBranchesData[branchIndex];
+            const hidden = branch.hidden;
+            const mainHidden = hidden.mainQi !== null ? heavenlyStemsData[hidden.mainQi] : null;
+            const otherHidden = hidden.otherQi.map(idx => heavenlyStemsData[idx]);
+
+            return {
+                title: pillarTitle,
+                title_cn: pillarTitleCn,
+                isUnknown: false,
+                pillarIndex: 5, // Generic index for dynamic pillars
+                stemIndex: stemIndex,
+                branchIndex: branchIndex,
+                stem: { ...stem, god: get10God(dayMasterIndex, stemIndex) },
+                branch: branch,
+                hidden: {
+                    main: mainHidden ? { ...mainHidden, god: get10God(dayMasterIndex, hidden.mainQi) } : null,
+                    others: otherHidden.map((h, k) => ({ ...h, god: get10God(dayMasterIndex, hidden.otherQi[k]) }))
+                },
+                stage: getQiStage(dayMaster, branchIndex)
+            };
+        }
+
+
         // --- EVENT LISTENERS ---
         initializePage();
         dom.unknownBirthHourCheckbox.addEventListener('change', () => {
@@ -920,7 +1223,7 @@
             const baziData = calculateBaziChart();
             if (baziData) {
                 natalChartPillars = baziData.processedPillars;
-                analyzeBazi(natalChartPillars); // <-- NEW MAIN ANALYSIS FUNCTION
+                analyzeBazi(natalChartPillars);
                 
                 const birthYear = parseInt(dom.birthYearInput.value);
                 const gender = dom.genderInput.value;
@@ -938,13 +1241,19 @@
             dom.analysisResultDiv.innerHTML = "";
             dom.scenarioAnalysisResultDiv.innerHTML = "";
             if(dom.tenGodsAnalysisDiv) dom.tenGodsAnalysisDiv.innerHTML = "";
+            dom.dynamicAnalysisResultDiv.innerHTML = "";
             natalChartPillars = []; 
+            originalBaziVerdict = null;
+            original10GodsVerdict = null;
             initializePage();
         });
 
         dom.luckPillarResult.addEventListener("click", e => {
             if (natalChartPillars.length === 0) return;
-            const dayMasterIndex = natalChartPillars.find(p => p.title === 'DAY').stemIndex;
+            const dayMasterPillar = natalChartPillars.find(p => p.title === 'DAY');
+            if(!dayMasterPillar || dayMasterPillar.isUnknown) return;
+            const dayMasterIndex = dayMasterPillar.stemIndex;
+
             const luckPillarCard = e.target.closest(".luck-pillar-card");
             const liuNianCard = e.target.closest(".liunian-card");
             const liuYueCard = e.target.closest(".liuyue-card");
@@ -952,6 +1261,12 @@
             if (luckPillarCard) {
                 document.querySelectorAll(".luck-pillar-card.active, .liunian-card.active, .liuyue-card.active").forEach(c => c.classList.remove("active"));
                 luckPillarCard.classList.add("active");
+                
+                const luckPillarObject = createPillarObjectFromCard(luckPillarCard, 'LUCK', '大运');
+                if (luckPillarObject) {
+                    runDynamicAnalysis([luckPillarObject], `Analisis Dinamis (Natal + Dayun)`);
+                }
+
                 const liuYueContainer = document.getElementById('liuyue-container'); if (liuYueContainer) liuYueContainer.innerHTML = "";
                 const liuRiContainer = document.getElementById('liuri-container'); if (liuRiContainer) liuRiContainer.innerHTML = "";
                 displayLiuNian(luckPillarCard);
@@ -960,6 +1275,20 @@
             if (liuNianCard) {
                 document.querySelectorAll(".liunian-card.active, .liuyue-card.active").forEach(c => c.classList.remove("active"));
                 liuNianCard.classList.add("active");
+                
+                const activeLuckPillarCard = document.querySelector('.luck-pillar-card.active');
+                if (activeLuckPillarCard) {
+                    const luckPillarObject = createPillarObjectFromCard(activeLuckPillarCard, 'LUCK', '大运');
+                    const liuNianPillarObject = createPillarObjectFromCard(liuNianCard, 'ANNUAL', '流年');
+
+                    if (luckPillarObject && liuNianPillarObject) {
+                        runDynamicAnalysis(
+                            [luckPillarObject, liuNianPillarObject], 
+                            `Analisis Dinamis (Natal + Dayun + Liunian ${liuNianCard.dataset.year})`
+                        );
+                    }
+                }
+                
                 const liuRiContainer = document.getElementById('liuri-container'); if (liuRiContainer) liuRiContainer.innerHTML = "";
                 displayLiuYue(liuNianCard, dayMasterIndex);
             }
@@ -967,7 +1296,23 @@
             if (liuYueCard) {
                 document.querySelectorAll(".liuyue-card.active").forEach(c => c.classList.remove("active"));
                 liuYueCard.classList.add("active");
-                displayLiuRi(liuYueCard);
+
+                const activeLuckPillarCard = document.querySelector('.luck-pillar-card.active');
+                const activeLiuNianCard = document.querySelector('.liunian-card.active');
+
+                if (activeLuckPillarCard && activeLiuNianCard) {
+                    const luckPillarObject = createPillarObjectFromCard(activeLuckPillarCard, 'LUCK', '大运');
+                    const liuNianPillarObject = createPillarObjectFromCard(activeLiuNianCard, 'ANNUAL', '流年');
+                    const liuYuePillarObject = createPillarObjectFromCard(liuYueCard, 'MONTHLY', '流月');
+
+                    if (luckPillarObject && liuNianPillarObject && liuYuePillarObject) {
+                        runDynamicAnalysis(
+                            [luckPillarObject, liuNianPillarObject, liuYuePillarObject],
+                            `Analisis Dinamis (Natal + Dayun + Liunian + Liuyue ${liuYueCard.dataset.monthName})`
+                        );
+                    }
+                }
+                displayLiuRi(liuYueCard); // Re-activated Liu Ri display
             }
         });
     });
