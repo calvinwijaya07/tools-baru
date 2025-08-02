@@ -179,10 +179,19 @@
 
             const dm = knownPillars.find(p => p.title === 'DAY');
             let notes = [];
+            
+            // Special Chart Check (Priority 1: Transformation)
+            const transformCheck = checkForTransformationChart(knownPillars, notes);
+            if (transformCheck.isSpecial) {
+                const finalVerdict = determineFinalVerdict(null, null, notes, transformCheck);
+                displayStrengthAnalysis(finalVerdict);
+                return;
+            }
+
             let scores = calculateBaseScores(knownPillars, notes);
             scores = applyInteractionModifiers(scores, knownPillars, notes);
             
-            const specialChartCheck = checkForSpecialChart(scores, knownPillars, notes);
+            const specialChartCheck = checkForOtherSpecialCharts(scores, knownPillars, notes);
             const finalVerdict = determineFinalVerdict(scores, dm.stem.element, notes, specialChartCheck);
             
             displayStrengthAnalysis(finalVerdict);
@@ -273,8 +282,29 @@
 
             return scores;
         }
+        
+        function checkForTransformationChart(pillars, notes) {
+            const dm = pillars.find(p => p.title === 'DAY');
+            const monthPillar = pillars.find(p => p.title === 'MONTH');
+            const adjacentStem = monthPillar.stem; // Check month pillar first
+            const combos = { '甲己': 'Earth', '乙庚': 'Metal', '丙辛': 'Water', '丁壬': 'Wood', '戊癸': 'Fire' };
+            const dmChar = dm.stem.char;
+            const adjacentChar = adjacentStem.char;
+            
+            for (const combo in combos) {
+                if (combo.includes(dmChar) && combo.includes(adjacentChar)) {
+                    const transformedElement = combos[combo];
+                    const seasonElement = getSeasonElement(monthPillar.branch.pinyin);
+                    if (transformedElement === seasonElement) {
+                        notes.push(`Bagan terdeteksi sebagai Bagan Transformasi ${transformedElement} (Hua Qi Ge).`);
+                        return { isSpecial: true, type: `Transformasi ${transformedElement}`, favorable: [transformedElement, elementCycle[(elementCycle.indexOf(transformedElement) + 4) % 5]] };
+                    }
+                }
+            }
+            return { isSpecial: false };
+        }
 
-        function checkForSpecialChart(scores, pillars, notes) {
+        function checkForOtherSpecialCharts(scores, pillars, notes) {
             const dm = pillars.find(p => p.title === 'DAY');
             const dmElement = dm.stem.element;
             const resourceElement = elementCycle[(elementCycle.indexOf(dmElement) + 4) % 5];
@@ -284,6 +314,18 @@
 
             const dominantNames = { Wood: "Dominan Kayu (Qu Zhi Ge)", Fire: "Dominan Api (Yan Shang Ge)", Earth: "Dominan Tanah (Jia Se Ge)", Metal: "Dominan Logam (Cong Ge Ge)", Water: "Dominan Air (Run Xia Ge)" };
             const followNames = { Output: "Mengikuti Ekspresi (Cong Er Ge)", Wealth: "Mengikuti Harta (Cong Cai Ge)", Officer: "Mengikuti Kekuasaan (Cong Sha Ge)" };
+
+            // Check for Two Strong Elements
+            const significantElements = Object.entries(scores).filter(([, score]) => (score / totalScore * 100) > 10);
+            if (significantElements.length === 2) {
+                const [el1, el2] = [significantElements[0][0], significantElements[1][0]];
+                const el1Index = elementCycle.indexOf(el1);
+                const el2Index = elementCycle.indexOf(el2);
+                if (Math.abs(el1Index - el2Index) === 1 || Math.abs(el1Index - el2Index) === 4) { // Productive cycle
+                     notes.push(`Bagan terdeteksi sebagai Bagan Dua Elemen Kuat (${el1} & ${el2}).`);
+                     return { isSpecial: true, type: `Dua Elemen Kuat (${el1} & ${el2})`, favorable: [el1, el2] };
+                }
+            }
 
             // Check for Dominant Chart
             if (supportingPercentage >= 70) {
@@ -323,12 +365,12 @@
         function determineFinalVerdict(scores, dmElement, notes, specialCheck) {
             if (specialCheck.isSpecial) {
                 return {
-                    scores,
+                    scores: scores || { Wood:0, Fire:0, Earth:0, Metal:0, Water:0 }, // Provide dummy scores if null
                     dmStatus: `Bagan Spesial: ${specialCheck.type}`,
                     favorableElements: specialCheck.favorable,
                     unfavorableElements: elementCycle.filter(el => !specialCheck.favorable.includes(el)),
                     notes,
-                    totalScore: Object.values(scores).reduce((a, b) => a + b, 0)
+                    totalScore: Object.values(scores || {}).reduce((a, b) => a + b, 1)
                 };
             }
 
