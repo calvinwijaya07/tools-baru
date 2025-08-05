@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Bazi Profesional - Insight AI</title>
+    <title>Kalkulator Bazi Profesional - Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,7 +49,6 @@
         #loading-spinner { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 4px solid var(--bg-tertiary); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; z-index: 9999; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* Gaya untuk Konten AI */
         #ai-result-container h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-primary); }
         #ai-result-container p { margin-bottom: 1rem; line-height: 1.6; }
         #ai-result-container strong { color: var(--text-primary); font-weight: 600; }
@@ -115,6 +114,7 @@
                     <button class="tab-button" data-tab="tab-content-natal">Analisis Bawaan</button>
                     <button class="tab-button" data-tab="tab-content-dynamic">Analisis Dinamis</button>
                     <button class="tab-button" data-tab="tab-content-ai-insight">Insight AI</button>
+                    <button class="tab-button" data-tab="tab-content-other">Lainnya</button>
                 </nav>
             </div>
 
@@ -136,7 +136,6 @@
                 <div id="ming-gua-bazhai-result"></div>
             </div>
             
-            <!-- KONTEN BARU: TAB INSIGHT AI -->
             <div id="tab-content-ai-insight" class="tab-content">
                 <div class="bg-secondary border border-primary rounded-2xl shadow-lg p-6 md:p-8 space-y-6">
                     <div>
@@ -1288,7 +1287,6 @@
         };
         
         const renderAiResponse = (text) => {
-            // Basic markdown to HTML conversion
             let html = text
                 .replace(/### (.*)/g, '<h3>$1</h3>')
                 .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
@@ -1299,8 +1297,9 @@
         };
 
         const prepareGeminiContext = () => {
-            const activeDayun = document.querySelector('.pillar-card.current-dayun');
-            const activeLiunian = document.querySelector('.pillar-card.current-liunian');
+            const activeDayun = document.querySelector('.pillar-card.active[data-dayun-index]');
+            const activeLiunian = document.querySelector('.pillar-card.active[data-year]');
+            const activeLiuyue = document.querySelector('.pillar-card.active[data-month-name]');
             
             return {
                 natalChart: {
@@ -1309,76 +1308,73 @@
                     tenGods: original10GodsVerdict
                 },
                 activeDayun: activeDayun ? createPillarObjectFromCard(activeDayun, 'LUCK', '大运') : null,
-                activeLiunian: activeLiunian ? createPillarObjectFromCard(activeLiunian, 'ANNUAL', '流年') : null
+                activeLiunian: activeLiunian ? createPillarObjectFromCard(activeLiunian, 'ANNUAL', '流年') : null,
+                activeLiuyue: activeLiuyue ? createPillarObjectFromCard(activeLiuyue, 'MONTHLY', '流月') : null
             };
         };
 
         const generateGeminiPrompt = (aspect, context) => {
-                let prompt = `Peran Anda: Anda adalah seorang "Strategic Life Consultant" elit. Anda menggabungkan ketajaman seorang ahli Bazi, kearifan seorang filsuf Tao, strategi seorang jenderal ala Sun Tzu, dan pragmatisme seorang psikolog modern. Output Anda bukan ramalan, melainkan sebuah "Strategic Action Plan" yang tajam, logis, dan memberdayakan.
+            let prompt = `Peran Anda: Anda adalah seorang "Strategic Life Consultant" elit. Anda menggabungkan ketajaman seorang ahli Bazi, kearifan seorang filsuf Tao, strategi seorang jenderal ala Sun Tzu, dan pragmatisme seorang psikolog modern. Output Anda bukan ramalan, melainkan sebuah "Strategic Action Plan" yang tajam, logis, dan memberdayakan.
 
             Konteks: Anda sedang menganalisis data Bazi seorang klien. Anggap Natal Chart sebagai "Aset Internal & DNA Potensi". Anggap pilar waktu (Dayun, Liunian, Liuyue) sebagai "Medan Perang & Iklim Eksternal" saat ini. Kekuatan Day Master (DM) dan interaksi antar pilar adalah kunci utama untuk semua strategi.
 
             Data Bazi Klien:
-                ${JSON.stringify(context, null, 2)}
+            ${JSON.stringify(context, null, 2)}
 
-            Tugas Utama Anda: Lakukan analisis forensik terhadap interaksi kunci dalam bagan ini dan berikan panduan strategis yang relevan untuk aspek **${aspect.toUpperCase()}**.
+            Tugas Utama Anda: Lakukan analisis holistik dari karakter inti hingga strategi dinamis untuk aspek **${aspect.toUpperCase()}**.
 
             Struktur Jawaban (WAJIB DIIKUTI):
 
-            ### 1. Analisis Dinamika & Kekuatan DM
+            ### 1. Profil Day Master (Arketipe Inti Anda)
             * **Identifikasi Arketipe:** Sebutkan Day Master klien (misal: Jia Wood, Ding Fire) dan jelaskan arketipe dasarnya dalam bahasa psikologis modern. Gunakan metafora yang kuat (misal: "Anda adalah Pohon Besar yang kokoh," atau "Anda adalah Cahaya Lilin yang membimbing").
             * **Analisis Kekuatan Bawaan (Natal):** Berdasarkan status kekuatan DM bawaan (Kuat, Lemah, atau Bagan Spesial), jelaskan Kelebihan dan Kekurangan utama dari arketipe ini.
-            * **Jika Kuat/Spesial:** Jelaskan bagaimana ini menjadi kekuatan dominan (misal: "Sebagai Pohon Kuat, kelebihan Anda adalah kemandirian dan ketahanan...") dan potensi kelemahannya (misal: "...namun bisa menjadi kaku dan sulit beradaptasi.").
-            * **Jika Lemah:** Jelaskan bagaimana ini menjadi sumber sensitivitas dan empati (misal: "Sebagai Pohon Lemah, kelebihan Anda adalah fleksibilitas dan kemampuan beradaptasi...") dan potensi kelemahannya (misal: "...namun bisa mudah terpengaruh oleh lingkungan dan butuh dukungan.").
+                * **Jika Kuat/Spesial:** Jelaskan bagaimana ini menjadi kekuatan dominan (misal: "Sebagai Pohon Kuat, kelebihan Anda adalah kemandirian dan ketahanan...") dan potensi kelemahannya (misal: "...namun bisa menjadi kaku dan sulit beradaptasi.").
+                * **Jika Lemah:** Jelaskan bagaimana ini menjadi sumber sensitivitas dan empati (misal: "Sebagai Pohon Lemah, kelebihan Anda adalah fleksibilitas dan kemampuan beradaptasi...") dan potensi kelemahannya (misal: "...namun bisa mudah terpengaruh oleh lingkungan dan butuh dukungan.").
             * **Jika ini adalah Bagan Spesial (Follow/Dominant),** jelaskan bagaimana ini secara fundamental mengubah sifat dasar dan strategi hidup DM.
-            * **Pengaruh Periode Saat Ini (Dayun, Liunian, Liuyue):** Analisis bagaimana pilar-pilar waktu yang aktif saat ini mengubah kekuatan DM. Apakah mereka mendukung, melemahkan, atau menyeimbangkan DM?
+
+            ### 2. Analisis Dinamika & Kekuatan DM Saat Ini
+            * **Pengaruh Periode Waktu:** Analisis bagaimana pilar-pilar waktu yang aktif (Dayun, Liunian, Liuyue) mengubah kekuatan DM dari kondisi bawaannya. Apakah mereka mendukung, melemahkan, atau menyeimbangkan DM?
             * **Kesimpulan Dinamis:** Berikan kesimpulan akhir dari kekuatan DM saat ini. Contoh: "Secara keseluruhan, Day Master Anda yang tadinya Lemah kini mendapatkan dukungan kuat dari elemen Air di Dayun, membuatnya menjadi Seimbang dan siap bertindak."
 
-            ### 2. Identifikasi Interaksi Kunci (Pusat 'Drama')
+            ### 3. Identifikasi Interaksi Kunci (Pusat 'Drama')
             Berdasarkan data yang diberikan, identifikasi dan jelaskan maksimal 3 interaksi paling signifikan yang menjadi "pemicu" utama dalam periode ini. Prioritaskan interaksi seperti: Clash (Chong), Combination (He), Punishment (Xing), Fan Yin/Fu Yin, atau kemunculan 10 Dewa yang sangat kuat (Tou Gan/Tou Geng).
             * **Interaksi 1:** [Sebutkan interaksinya, misal: Clash antara Cabang Hari (Wu) dan Cabang Dayun (Zi)]
-            * **Artinya:** Terjemahkan interaksi ini ke dalam bahasa kehidupan nyata yang relevan dengan aspek ${aspect.toUpperCase()}.
+                * **Artinya:** Terjemahkan interaksi ini ke dalam bahasa kehidupan nyata yang relevan dengan aspek ${aspect.toUpperCase()}. Contoh: "Ini menandakan adanya potensi guncangan atau perubahan mendadak dalam ranah... "
             * **Interaksi 2:** [Sebutkan dan jelaskan]
+            * **Interaksi 3:** [Sebutkan dan jelaskan]
 
-            ### 3. Rencana Aksi Strategis (Solusi Berbasis Kekuatan DM)
-            Berikan 3 saran konkret yang langsung menjawab interaksi kunci di atas.
+            ### 4. Rencana Aksi Strategis (Solusi dari 'Drama')
+            Berikan 3 saran konkret yang langsung menjawab interaksi kunci di atas. Setiap saran HARUS berakar dari "Kesimpulan Dinamis" di atas.
             * **Saran 1 (Menjawab Interaksi X):**
-                // PERUBAHAN KRUSIAL DI SINI: Memaksa AI menghubungkan saran dengan kondisi DM
-                * **Dasar Metafisika:** Jelaskan bagaimana saran ini cocok untuk kondisi DM Anda saat ini (sesuai Kesimpulan Dinamis di atas) dalam menghadapi interaksi ini. Contoh: "Karena DM Anda kini Kuat, cara terbaik menghadapi Clash ini adalah dengan menyalurkan energi berlebih melalui elemen Output..."
-                * **Aksi Nyata & Psikologis:** Berikan langkah praktis yang selaras dengan dasar metafisika tersebut.
+                * **Dasar Metafisika:** Jelaskan bagaimana saran ini cocok untuk kondisi DM Anda saat ini dalam menghadapi interaksi ini. Contoh: "Karena DM Anda kini Kuat, cara terbaik menghadapi Clash ini adalah dengan menyalurkan energi berlebih melalui elemen Output..."
+                * **Aksi Nyata & Psikologis:** Berikan langkah praktis yang selaras.
             * **Saran 2 (Menjawab Interaksi Y):**
-                * **Dasar Metafisika:** [Jelaskan bagaimana saran ini membantu kondisi DM saat ini]
+                * **Dasar Metafisika:** [Jelaskan dasar Bazi-nya]
                 * **Aksi Nyata & Psikologis:** [Berikan langkah praktisnya]
             * **Saran 3 (Menjawab Interaksi Z):**
-                * **Dasar Metafisika:** [Jelaskan bagaimana saran ini membantu kondisi DM saat ini]
+                * **Dasar Metafisika:** [Jelaskan dasar Bazi-nya]
                 * **Aksi Nyata & Psikologis:** [Berikan langkah praktisnya]
 
-            ### 4. Mindset & Fokus Utama
-            Rangkum dalam satu kalimat, apa yang harus menjadi mantra atau fokus utama klien selama periode ini, yang selaras dengan kondisi DM mereka. Contoh: "Fokus utama Anda saat ini adalah: 'Menyalurkan Kekuatan, Bukan Melawan Arus'."`;
-                
-            return prompt;
-        };
-
-        async function callGeminiApi(prompt, apiKey) {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{
-                    parts: [{ text: prompt }]
-                }]
+            ### 5. Mindset & Fokus Utama
+            Rangkum dalam satu kalimat, apa yang harus menjadi mantra atau fokus utama klien selama periode ini, yang selaras dengan kondisi DM mereka.`;
+    
+        return prompt;
             };
 
+        async function callGeminiApi(prompt, apiKey) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error.message || `HTTP error! status: ${response.status}`);
             }
-
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
         }
