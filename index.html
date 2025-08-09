@@ -321,19 +321,65 @@
             }
         }
 
-        function calculateLuckPillars(natalPillars, gender) {
+        function getSolarTermDate(year, month, day) {
+            const currentTriggerDay = solarMonthStartDates[gregorianToSolarOrderMap[month]];
+            let baziGregorianMonth = month;
+            let baziYearForMonth = year;
+
+            if (day < currentTriggerDay) {
+                baziGregorianMonth = (month - 1 + 12) % 12;
+                if (month === 0) { 
+                    baziYearForMonth = year - 1;
+                }
+            }
+            
+            const nextBaziMonth = (baziGregorianMonth + 1) % 12;
+            const nextBaziYear = (baziGregorianMonth === 11) ? baziYearForMonth + 1 : baziYearForMonth;
+            const nextTermDay = solarMonthStartDates[gregorianToSolarOrderMap[nextBaziMonth]];
+            const nextTermDate = new Date(Date.UTC(nextBaziYear, nextBaziMonth, nextTermDay, 0, 0, 0));
+
+            const thisTermDay = solarMonthStartDates[gregorianToSolarOrderMap[baziGregorianMonth]];
+            const prevTermDate = new Date(Date.UTC(baziYearForMonth, baziGregorianMonth, thisTermDay, 0, 0, 0));
+
+            return { nextTermDate, prevTermDate };
+        }
+
+        function calculateLuckPillars(natalPillars, gender, birthDateObj) {
             const yearPillar = natalPillars.find(p => p.title === 'YEAR');
             const monthPillar = natalPillars.find(p => p.title === 'MONTH');
+            if (!yearPillar || yearPillar.isUnknown || !monthPillar || monthPillar.isUnknown) {
+                return { error: "Data pilar tidak lengkap untuk menghitung Dayun." };
+            }
+
             const yearStemPolarity = yearPillar.stem.polarity;
             const monthStemIndex = monthPillar.stemIndex;
             const monthBranchIndex = monthPillar.branchIndex;
+
             let direction = (gender === 'male' && yearStemPolarity === 'Yin') || (gender === 'female' && yearStemPolarity === 'Yang') ? -1 : 1;
+
+            const birthDate = new Date(Date.UTC(birthDateObj.year, birthDateObj.month, birthDateObj.day, birthDateObj.hour, birthDateObj.minute));
+            const { nextTermDate, prevTermDate } = getSolarTermDate(birthDateObj.year, birthDateObj.month, birthDateObj.day);
+
+            let timeDifference;
+            if (direction === 1) { // Maju
+                timeDifference = nextTermDate.getTime() - birthDate.getTime();
+            } else { // Mundur
+                timeDifference = birthDate.getTime() - prevTermDate.getTime();
+            }
+
+            const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
+            
+            let firstDayunStartAge = Math.round(daysDifference / 3);
+            if (firstDayunStartAge < 1) firstDayunStartAge = 1;
+
             const luckPillars = [];
-            for (let i = 1; i <= 10; i++) {
-                const lpStemIndex = (monthStemIndex + i * direction + 100) % 10;
-                const rawBranchIndex = monthBranchIndex + i * direction;
+            for (let i = 0; i < 10; i++) {
+                const lpStemIndex = (monthStemIndex + (i + 1) * direction + 100) % 10;
+                const rawBranchIndex = monthBranchIndex + (i + 1) * direction;
                 const lpBranchIndex = ((rawBranchIndex % 12) + 12) % 12;
-                const startAge = (i - 1) * 10 + 2;
+                
+                const startAge = firstDayunStartAge + (i * 10);
+                
                 luckPillars.push({ stemIndex: lpStemIndex, branchIndex: lpBranchIndex, startAge: startAge, endAge: startAge + 9 });
             }
             return { pillars: luckPillars };
@@ -522,16 +568,34 @@
             dom.scenarioAnalysisResultDiv.innerHTML = html;
         }
 
-        const scoreWeights = { SEASON: 45, STEM_SUPPORT: 10, UNROOTED_STEM: 5, HALF_3_HARMONY: 20, STEM_COMBO_FAIL: 5, PUNISHMENT: 5 };
+        const scoreWeights = { SEASON: 25, PRODUCED_BY_SEASON: 40, DAYUN_BRANCH_INFLUENCE: 35, DAYUN_STEM_INFLUENCE: 25, STEM_SUPPORT: 10, UNROOTED_STEM: 5, HALF_3_HARMONY: 20, STEM_COMBO_FAIL: 5, PUNISHMENT: 5, DUPLICATE_STEM_MULTIPLIER: 1.5 };
         
         function calculateBaseScores(pillars, notes) {
             let scores = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
             const monthPillar = pillars.find(p => p.title === 'MONTH');
             if (!monthPillar) return scores;
             const monthBranch = earthlyBranchesData[monthPillar.branchIndex];
+            
             const seasonElement = getSeasonElement(monthBranch.pinyin);
             scores[seasonElement] += scoreWeights.SEASON;
             if(notes) notes.push(`Lahir di musim ${seasonElement}, memberi +${scoreWeights.SEASON} poin.`);
+
+            const seasonElementIndex = elementCycle.indexOf(seasonElement);
+            const producedElement = elementCycle[(seasonElementIndex + 1) % 5];
+            scores[producedElement] += scoreWeights.PRODUCED_BY_SEASON;
+            if(notes) notes.push(`Musim ${seasonElement} mendukung ${producedElement}, memberi bonus +${scoreWeights.PRODUCED_BY_SEASON} poin.`);
+
+            const dayunPillar = pillars.find(p => p.title === 'LUCK');
+            if (dayunPillar) {
+                const dayunBranchElement = dayunPillar.branch.element;
+                scores[dayunBranchElement] += scoreWeights.DAYUN_BRANCH_INFLUENCE;
+                if(notes) notes.push(`Pengaruh Cabang Dayun ${dayunPillar.branch.char} (${dayunBranchElement}) sangat kuat, memberi bonus +${scoreWeights.DAYUN_BRANCH_INFLUENCE} poin.`);
+                
+                const dayunStemElement = dayunPillar.stem.element;
+                scores[dayunStemElement] += scoreWeights.DAYUN_STEM_INFLUENCE;
+                if(notes) notes.push(`Pengaruh Batang Dayun ${dayunPillar.stem.char} (${dayunStemElement}) kuat, memberi bonus +${scoreWeights.DAYUN_STEM_INFLUENCE} poin.`);
+            }
+
             pillars.forEach(p => {
                 if (p.isUnknown) return;
                 const branch = p.branch;
@@ -539,17 +603,31 @@
                 allHiddenStems.forEach(hsIndex => {
                     const hiddenStem = heavenlyStemsData[hsIndex];
                     let scoreToAdd = (hsIndex === branch.hidden.mainQi) ? 15 : 10;
-                    if (['MONTH', 'DAY', 'LUCK', 'ANNUAL', 'MONTHLY'].includes(p.title)) { scoreToAdd += 5; }
+                    if (['MONTH', 'DAY', 'ANNUAL', 'MONTHLY'].includes(p.title)) { scoreToAdd += 5; }
                     scores[hiddenStem.element] += scoreToAdd;
                     if(notes) notes.push(`Kekuatan dari ${branch.pinyin} (${hiddenStem.char}) memberi +${scoreToAdd} poin ke ${hiddenStem.element}.`);
                 });
             });
+            
+            let stemCounts = {};
             pillars.forEach(p => {
-                if (p.isUnknown || p.title === 'DAY') return;
+                if (p.isUnknown) return;
+                const stemChar = p.stem.char;
+                stemCounts[stemChar] = (stemCounts[stemChar] || 0) + 1;
+            });
+
+            pillars.forEach(p => {
+                if (p.isUnknown || p.title === 'DAY' || p.title === 'LUCK') return;
                 const stem = p.stem;
-                const scoreToAdd = hasRoot(stem.stemIndex, pillars) ? scoreWeights.STEM_SUPPORT : scoreWeights.UNROOTED_STEM;
+                let scoreToAdd = hasRoot(stem.stemIndex, pillars) ? scoreWeights.STEM_SUPPORT : scoreWeights.UNROOTED_STEM;
+                
+                if (stemCounts[stem.char] > 1) {
+                    scoreToAdd *= scoreWeights.DUPLICATE_STEM_MULTIPLIER;
+                    if(notes) notes.push(`Batang Langit ${stem.char} muncul lebih dari sekali, kekuatannya diperbesar.`);
+                }
+
                 scores[stem.element] += scoreToAdd;
-                if(notes) notes.push(`Batang Langit ${stem.char} (${hasRoot(stem.stemIndex, pillars) ? 'berakar' : 'tanpa akar'}) memberi +${scoreToAdd} poin ke ${stem.element}.`);
+                if(notes) notes.push(`Batang Langit ${stem.char} (${hasRoot(stem.stemIndex, pillars) ? 'berakar' : 'tanpa akar'}) memberi +${scoreToAdd.toFixed(1)} poin ke ${stem.element}.`);
             });
             return scores;
         }
@@ -615,26 +693,72 @@
 
         function checkForOtherSpecialCharts(scores, pillars, notes) {
             const dm = pillars.find(p => p.title === 'DAY');
+            if (!dm) return { isSpecial: false };
+
             const dmElement = dm.stem.element;
-            const resourceElement = elementCycle[(elementCycle.indexOf(dmElement) + 4) % 5];
-            const supportingScore = scores[dmElement] + scores[resourceElement];
             const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-            const supportingPercentage = totalScore > 0 ? (supportingScore / totalScore) * 100 : 0;
-            const dominantNames = { Wood: "Dominan Kayu (Qu Zhi Ge)", Fire: "Dominan Api (Yan Shang Ge)", Earth: "Dominan Tanah (Jia Se Ge)", Metal: "Dominan Logam (Cong Ge Ge)", Water: "Dominan Air (Run Xia Ge)" };
-            const followNames = { Output: "Mengikuti Ekspresi (Cong Er Ge)", Wealth: "Mengikuti Harta (Cong Cai Ge)", Officer: "Mengikuti Kekuasaan (Cong Sha Ge)" };
-            if (supportingPercentage >= 70) {
-                if(notes) notes.push('Bagan berpotensi Bagan Dominan.');
-                return { isSpecial: true, type: dominantNames[dmElement], favorable: [dmElement, resourceElement, elementCycle[(elementCycle.indexOf(dmElement) + 1) % 5]] };
+            if (totalScore === 0) return { isSpecial: false };
+
+            const dmScore = scores[dmElement];
+            const resourceElement = elementCycle[(elementCycle.indexOf(dmElement) + 4) % 5];
+            const resourceScore = scores[resourceElement];
+            const outputElement = elementCycle[(elementCycle.indexOf(dmElement) + 1) % 5];
+            const outputScore = scores[outputElement];
+            const wealthElement = elementCycle[(elementCycle.indexOf(dmElement) + 2) % 5];
+            const wealthScore = scores[wealthElement];
+            const officerElement = elementCycle[(elementCycle.indexOf(dmElement) + 3) % 5];
+            const officerScore = scores[officerElement];
+
+            const supportingScore = dmScore + resourceScore;
+            const supportingPercentage = (supportingScore / totalScore) * 100;
+
+            const dmPercentage = (dmScore / totalScore) * 100;
+            const seasonElement = getSeasonElement(pillars.find(p => p.title === 'MONTH').branch.pinyin);
+            
+            if (dmPercentage > 50 && (seasonElement === dmElement || seasonElement === resourceElement)) {
+                const dominantNames = { Wood: "Dominan Kayu (Qu Zhi Ge)", Fire: "Dominan Api (Yan Shang Ge)", Earth: "Dominan Tanah (Jia Se Ge)", Metal: "Dominan Logam (Cong Ge Ge)", Water: "Dominan Air (Run Xia Ge)" };
+                if(notes) notes.push(`Bagan berpotensi ${dominantNames[dmElement]} karena elemen DM sangat kuat dan didukung musim.`);
+                return { 
+                    isSpecial: true, 
+                    type: dominantNames[dmElement], 
+                    favorable: [dmElement, resourceElement, outputElement]
+                };
             }
-            if (supportingPercentage <= 20) {
-                const drainingScores = { Output: scores[elementCycle[(elementCycle.indexOf(dmElement) + 1) % 5]], Wealth: scores[elementCycle[(elementCycle.indexOf(dmElement) + 2) % 5]], Officer: scores[elementCycle[(elementCycle.indexOf(dmElement) + 3) % 5]] };
-                const dominantDraining = Object.keys(drainingScores).reduce((a, b) => drainingScores[a] > drainingScores[b] ? a : b);
-                if (drainingScores[dominantDraining] / totalScore * 100 >= 50) {
-                    if(notes) notes.push(`Bagan berpotensi ${followNames[dominantDraining]}.`);
-                    const followedElement = elementCycle[(elementCycle.indexOf(dmElement) + { Output: 1, Wealth: 2, Officer: 3 }[dominantDraining]) % 5];
-                    return { isSpecial: true, type: followNames[dominantDraining], favorable: [followedElement, elementCycle[(elementCycle.indexOf(followedElement) + 4) % 5]] };
+
+            const resourcePercentage = (resourceScore / totalScore) * 100;
+            if (resourcePercentage > 60 && !hasRoot(dm.stem.stemIndex, pillars)) {
+                 if(notes) notes.push(`Bagan berpotensi Mengikuti Resource (Cong Yin Ge) karena elemen Resource sangat dominan dan DM tidak berakar.`);
+                 return {
+                    isSpecial: true,
+                    type: "Mengikuti Resource (Cong Yin Ge)",
+                    favorable: [resourceElement, dmElement]
+                 };
+            }
+
+            if (supportingPercentage <= 25 && !hasRoot(dm.stem.stemIndex, pillars)) {
+                const drainingScores = { 
+                    Output: outputScore, 
+                    Wealth: wealthScore, 
+                    Officer: officerScore 
+                };
+                
+                const dominantDrainingType = Object.keys(drainingScores).reduce((a, b) => drainingScores[a] > drainingScores[b] ? a : b);
+                const dominantDrainingScore = drainingScores[dominantDrainingType];
+
+                if ((dominantDrainingScore / totalScore * 100) >= 50) {
+                    const followNames = { Output: "Mengikuti Ekspresi (Cong Er Ge)", Wealth: "Mengikuti Harta (Cong Cai Ge)", Officer: "Mengikuti Kekuasaan (Cong Sha Ge)" };
+                    const followedElement = { Output: outputElement, Wealth: wealthElement, Officer: officerElement }[dominantDrainingType];
+                    const followedElementProducer = elementCycle[(elementCycle.indexOf(followedElement) + 4) % 5];
+                    
+                    if(notes) notes.push(`Bagan berpotensi ${followNames[dominantDrainingType]} karena DM sangat lemah dan tidak berakar.`);
+                    return { 
+                        isSpecial: true, 
+                        type: followNames[dominantDrainingType], 
+                        favorable: [followedElement, followedElementProducer]
+                    };
                 }
             }
+
             return { isSpecial: false };
         }
 
@@ -666,14 +790,27 @@
             const resourceElement = elementCycle[(elementCycle.indexOf(dmElement) + 4) % 5];
             const supportingScore = scores[dmElement] + scores[resourceElement];
             const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
-            let dmStatus = "Seimbang";
+            
+            let dmStatus = "";
             const percentage = totalScore > 0 ? (supportingScore / totalScore) * 100 : 0;
-            if (percentage > 60) dmStatus = "Kuat";
-            else if (percentage > 40) dmStatus = "Seimbang";
-            else dmStatus = "Lemah";
+            
+            if (percentage > 60) {
+                dmStatus = "Sangat Kuat";
+            } else if (percentage >= 55) {
+                dmStatus = "Kuat";
+            } else if (percentage >= 48) {
+                dmStatus = "Seimbang";
+            } else if (percentage >= 39) {
+                dmStatus = "Cenderung Lemah";
+            } else if (percentage >= 29) {
+                dmStatus = "Lemah";
+            } else {
+                dmStatus = "Sangat Lemah";
+            }
+
             let favorableElements = [],
                 unfavorableElements = [];
-            if (['Kuat'].includes(dmStatus)) {
+            if (['Sangat Kuat', 'Kuat'].includes(dmStatus)) {
                 favorableElements = [elementCycle[(elementCycle.indexOf(dmElement) + 1) % 5], elementCycle[(elementCycle.indexOf(dmElement) + 2) % 5], elementCycle[(elementCycle.indexOf(dmElement) + 3) % 5]];
                 unfavorableElements = [dmElement, resourceElement];
             } else {
@@ -872,9 +1009,18 @@
                 const percentage = result.totalScore > 0 ? (score / result.totalScore * 100).toFixed(1) : 0;
                 return `<div class="mb-3"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-[var(--text-primary)]">${el}</span><span class="text-sm font-medium text-[var(--text-secondary)]">${Math.round(score)} poin (${percentage}%)</span></div><div class="strength-bar-container"><div class="strength-bar ${elementColors[el]}" style="width: ${percentage}%;"></div></div></div>`;
             }).join('');
+            
             const goodIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`;
             const badIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>`;
-            let html = `<div class="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-lg p-6"><h3 class="text-2xl font-bold text-center mb-2">${title}</h3>${isHypothesis ? '<p class="text-center text-sm text-amber-600 mb-6">(Analisis ini adalah hipotesis awal, hasil akhir bergantung pada Pilar Jam)</p>' : '<p class="text-center text-sm text-[var(--text-secondary)] mb-6">Keseimbangan elemen bawaan lahir Anda.</p>'}<div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center"><div class="md:col-span-3">${scoreBarsHtml}</div><div class="md:col-span-2 text-center bg-[var(--bg-tertiary)] p-6 rounded-xl border border-[var(--border-secondary)]"><p class="text-lg text-[var(--text-secondary)]">${isHypothesis ? 'Status Hipotesis DM' : 'Status Day Master'}</p><p class="font-bold text-4xl ${result.dmStatus.includes('Kuat') || result.dmStatus.includes('Spesial') || result.dmStatus.includes('Pseudo') ? 'text-emerald-600' : 'text-rose-600'} my-2">${result.dmStatus}</p><div class="mt-6 space-y-3"><div class="bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-primary)]"><h4 class="font-bold text-md text-[var(--text-primary)] flex items-center justify-center">${goodIcon} Elemen Baik</h4><p class="text-[var(--text-secondary)] font-semibold mt-1">${result.favorableElements.join(', ')}</p></div><div class="bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-primary)]"><h4 class="font-bold text-md text-[var(--text-primary)] flex items-center justify-center">${badIcon} Elemen Buruk</h4><p class="text-[var(--text-secondary)] font-semibold mt-1">${result.unfavorableElements.join(', ')}</p></div></div></div></div></div>`;
+            
+            let statusColorClass = 'text-rose-600'; // Default
+            if (result.dmStatus.includes('Sangat Kuat') || result.dmStatus.includes('Kuat') || result.dmStatus.includes('Spesial') || result.dmStatus.includes('Pseudo')) {
+                statusColorClass = 'text-emerald-600';
+            } else if (result.dmStatus.includes('Seimbang')) {
+                statusColorClass = 'text-sky-600';
+            }
+
+            let html = `<div class="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-lg p-6"><h3 class="text-2xl font-bold text-center mb-2">${title}</h3>${isHypothesis ? '<p class="text-center text-sm text-amber-600 mb-6">(Analisis ini adalah hipotesis awal, hasil akhir bergantung pada Pilar Jam)</p>' : '<p class="text-center text-sm text-[var(--text-secondary)] mb-6">Keseimbangan elemen bawaan lahir Anda.</p>'}<div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center"><div class="md:col-span-3">${scoreBarsHtml}</div><div class="md:col-span-2 text-center bg-[var(--bg-tertiary)] p-6 rounded-xl border border-[var(--border-secondary)]"><p class="text-lg text-[var(--text-secondary)]">${isHypothesis ? 'Status Hipotesis DM' : 'Status Day Master'}</p><p class="font-bold text-4xl ${statusColorClass} my-2">${result.dmStatus}</p><div class="mt-6 space-y-3"><div class="bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-primary)]"><h4 class="font-bold text-md text-[var(--text-primary)] flex items-center justify-center">${goodIcon} Elemen Baik</h4><p class="text-[var(--text-secondary)] font-semibold mt-1">${result.favorableElements.join(', ')}</p></div><div class="bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-primary)]"><h4 class="font-bold text-md text-[var(--text-primary)] flex items-center justify-center">${badIcon} Elemen Buruk</h4><p class="text-[var(--text-secondary)] font-semibold mt-1">${result.unfavorableElements.join(', ')}</p></div></div></div></div></div>`;
             container.innerHTML = html;
         }
 
@@ -1140,11 +1286,17 @@
                 if (baziData) {
                     natalChartPillars = baziData.processedPillars;
                     analyzeBazi(natalChartPillars);
-                    const birthYear = parseInt(dom.birthYearInput.value);
+                    const birthDateObj = {
+                        year: parseInt(dom.birthYearInput.value),
+                        month: parseInt(dom.birthMonthInput.value),
+                        day: parseInt(dom.birthDayInput.value),
+                        hour: dom.unknownBirthHourCheckbox.checked ? 12 : parseInt(dom.birthHourInput.value),
+                        minute: dom.unknownBirthHourCheckbox.checked ? 0 : parseInt(dom.birthMinuteInput.value)
+                    };
                     const gender = dom.genderInput.value;
-                    const luckPillars = calculateLuckPillars(natalChartPillars, gender);
-                    displayLuckPillars(luckPillars, natalChartPillars, birthYear);
-                    const kuaNumber = calculateMingGua(birthYear, gender);
+                    const luckPillars = calculateLuckPillars(natalChartPillars, gender, birthDateObj);
+                    displayLuckPillars(luckPillars, natalChartPillars, birthDateObj.year);
+                    const kuaNumber = calculateMingGua(birthDateObj.year, gender);
                     displayMingGuaBazhai(kuaNumber);
                 }
                 dom.loadingSpinner.classList.add('hidden');
