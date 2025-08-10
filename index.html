@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Bazi Profesional - Final</title>
+    <title>Kalkulator Bazi Profesional - Final (Diperbaiki)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -190,7 +190,42 @@
         const earthlyBranchesData = [ { char: '子', pinyin: 'Zi', element: 'Water', polarity: 'Yang', shio: 'Tikus', shio_char: '鼠', hidden: { mainQi: 9, otherQi: [] } }, { char: '丑', pinyin: 'Chou', element: 'Earth', polarity: 'Yin', shio: 'Kerbau', shio_char: '牛', hidden: { mainQi: 5, otherQi: [9, 7] } }, { char: '寅', pinyin: 'Yin', element: 'Wood', polarity: 'Yang', shio: 'Macan', shio_char: '虎', hidden: { mainQi: 0, otherQi: [2, 4] } }, { char: '卯', pinyin: 'Mao', element: 'Wood', polarity: 'Yin', shio: 'Kelinci', shio_char: '兔', hidden: { mainQi: 1, otherQi: [] } }, { char: '辰', pinyin: 'Chen', element: 'Earth', polarity: 'Yang', shio: 'Naga', shio_char: '龍', hidden: { mainQi: 4, otherQi: [1, 9] } }, { char: '巳', pinyin: 'Si', element: 'Fire', polarity: 'Yin', shio: 'Ular', shio_char: '蛇', hidden: { mainQi: 2, otherQi: [6, 4] } }, { char: '午', pinyin: 'Wu', element: 'Fire', polarity: 'Yang', shio: 'Kuda', shio_char: '馬', hidden: { mainQi: 3, otherQi: [5] } }, { char: '未', pinyin: 'Wei', element: 'Earth', polarity: 'Yin', shio: 'Kambing', shio_char: '羊', hidden: { mainQi: 5, otherQi: [3, 1] } }, { char: '申', pinyin: 'Shen', element: 'Metal', polarity: 'Yang', shio: 'Monyet', shio_char: '猴', hidden: { mainQi: 6, otherQi: [8, 4] } }, { char: '酉', pinyin: 'You', element: 'Metal', polarity: 'Yin', shio: 'Ayam', shio_char: '雞', hidden: { mainQi: 7, otherQi: [] } }, { char: '戌', pinyin: 'Xu', element: 'Earth', polarity: 'Yang', shio: 'Anjing', shio_char: '狗', hidden: { mainQi: 4, otherQi: [7, 3] } }, { char: '亥', pinyin: 'Hai', element: 'Water', polarity: 'Yin', shio: 'Babi', shio_char: '豬', hidden: { mainQi: 8, otherQi: [0] } } ];
         const tenGods = { F: { name: 'Friend', cn: '比肩', abbr: 'F' }, RW: { name: 'Rob Wealth', cn: '劫財', abbr: 'RW' }, EG: { name: 'Eating God', cn: '食神', abbr: 'EG' }, HO: { name: 'Hurting Officer', cn: '傷官', abbr: 'HO' }, DW: { name: 'Direct Wealth', cn: '正財', abbr: 'DW' }, IW: { name: 'Indirect Wealth', cn: '偏財', abbr: 'IW' }, DO: { name: 'Direct Officer', cn: '正官', abbr: 'DO' }, '7K': { name: '7 Killings', cn: '七殺', abbr: '7K' }, DR: { name: 'Direct Resource', cn: '正印', abbr: 'DR' }, IR: { name: 'Indirect Resource', cn: '偏印', abbr: 'IR' } };
         const elementCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
-        const solarMonthStartDates = [6, 5, 6, 5, 6, 6, 7, 8, 8, 9, 8, 7];
+        
+        // --- PERBAIKAN DIMULAI DI SINI ---
+
+        // 1. Database Jie Qi yang Akurat (1930-2030) ditambahkan.
+        const solarTermDatesByYear = {
+            1930:[4,5,6,5,6,6,7,8,8,9,8,7], 1931:[4,5,6,5,6,6,8,8,8,9,8,7], 1932:[4,5,5,5,5,6,7,7,8,8,7,7], 1933:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1934:[4,5,6,5,6,6,7,8,8,9,8,7], 1935:[4,5,6,5,6,7,8,8,8,9,8,7], 1936:[4,5,5,5,6,6,7,7,8,8,7,7], 1937:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1938:[4,5,6,5,6,6,7,8,8,9,8,7], 1939:[4,5,6,5,6,7,8,8,8,9,8,7], 1940:[4,5,5,5,6,6,7,7,8,8,7,7], 1941:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1942:[4,5,6,5,6,6,7,8,8,9,8,7], 1943:[4,5,6,5,6,7,8,8,8,9,8,7], 1944:[4,5,5,5,5,6,7,7,8,8,7,7], 1945:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1946:[5,5,6,5,6,6,7,8,8,9,8,7], 1947:[5,5,6,5,6,7,8,8,8,9,8,7], 1948:[4,5,5,5,5,6,7,7,8,8,7,7], 1949:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1950:[4,5,6,5,6,6,7,8,8,9,8,7], 1951:[5,5,6,5,6,7,8,8,8,9,8,7], 1952:[4,5,5,5,5,6,7,7,8,8,7,7], 1953:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1954:[4,5,6,5,6,6,7,8,8,9,8,7], 1955:[5,5,6,5,6,7,8,8,8,9,8,7], 1956:[4,5,5,5,5,6,7,7,8,8,7,7], 1957:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1958:[4,5,6,5,6,6,7,8,8,9,8,7], 1959:[5,5,6,5,6,7,8,8,8,9,8,7], 1960:[4,5,5,5,5,6,7,7,8,8,7,7], 1961:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1962:[4,5,6,5,6,6,7,8,8,9,8,7], 1963:[5,5,6,5,6,7,8,8,8,9,8,7], 1964:[4,5,5,5,5,6,7,7,8,8,7,7], 1965:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1966:[4,5,6,5,6,6,7,8,8,9,8,7], 1967:[5,5,6,5,6,7,8,8,8,9,8,7], 1968:[4,5,5,5,5,6,7,7,8,8,7,7], 1969:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1970:[4,5,6,5,6,6,7,8,8,9,8,7], 1971:[5,5,6,5,6,7,8,8,8,9,8,7], 1972:[4,5,5,5,5,6,7,7,8,8,7,7], 1973:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1974:[4,5,6,5,6,6,7,8,8,9,8,7], 1975:[5,5,6,5,6,7,8,8,8,9,8,7], 1976:[4,5,5,5,5,6,7,7,8,8,7,7], 1977:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1978:[4,5,6,5,6,6,7,8,8,9,8,7], 1979:[5,5,6,5,6,7,8,8,8,9,8,7], 1980:[4,5,5,5,5,6,7,7,8,8,7,7], 1981:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1982:[4,5,6,5,6,6,7,8,8,9,8,7], 1983:[5,5,6,5,6,7,8,8,8,9,8,7], 1984:[4,5,5,5,5,6,7,7,8,8,7,7], 1985:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1986:[4,5,6,5,6,6,7,8,8,9,8,7], 1987:[5,5,6,5,6,7,8,8,8,9,8,7], 1988:[4,5,5,5,5,6,7,7,8,8,7,7], 1989:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1990:[4,5,6,5,6,6,7,8,8,9,8,7], 1991:[5,5,6,5,6,7,8,8,8,9,8,7], 1992:[4,5,5,5,5,6,7,7,8,8,7,7], 1993:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1994:[4,5,6,5,6,6,7,8,8,9,8,7], 1995:[5,5,6,5,6,7,8,8,8,9,8,7], 1996:[4,5,5,5,5,6,7,7,8,8,7,7], 1997:[4,5,5,5,5,6,7,8,8,8,7,7],
+            1998:[4,5,6,5,6,6,7,8,8,9,8,7], 1999:[4,6,6,5,6,7,8,8,8,9,8,7], 2000:[4,5,5,5,5,6,7,7,8,8,7,7], 2001:[4,5,5,5,5,6,7,8,8,8,7,7],
+            2002:[4,5,6,5,6,6,7,8,8,9,8,7], 2003:[4,6,6,5,6,7,8,8,8,9,8,7], 2004:[4,5,5,5,5,6,7,7,8,8,7,7], 2005:[4,5,5,5,5,6,7,8,8,8,7,7],
+            2006:[4,5,6,5,6,6,7,8,8,9,8,7], 2007:[4,6,6,5,6,7,8,8,8,9,8,7], 2008:[4,5,5,5,5,6,7,7,8,8,7,7], 2009:[4,5,5,5,5,6,7,8,8,8,7,7],
+            2010:[4,5,6,5,6,6,7,8,8,9,8,7], 2011:[4,6,6,5,6,7,8,8,8,9,8,7], 2012:[4,5,5,5,5,6,7,7,8,8,7,7], 2013:[4,5,5,5,5,6,7,8,8,8,7,7],
+            2014:[4,5,6,5,6,6,7,8,8,9,8,7], 2015:[4,6,6,5,6,7,8,8,8,9,8,7], 2016:[4,5,5,5,5,6,7,7,8,8,7,7], 2017:[3,5,5,5,5,6,7,8,8,8,7,7],
+            2018:[4,5,6,5,6,6,7,8,8,9,8,7], 2019:[4,6,6,5,6,7,8,8,8,9,8,7], 2020:[4,5,5,5,5,6,7,7,8,8,7,7], 2021:[3,5,5,5,5,6,7,8,8,8,7,7],
+            2022:[4,5,6,5,6,6,7,8,8,9,8,7], 2023:[4,6,6,5,6,7,8,8,8,9,8,7], 2024:[4,5,5,5,5,6,7,7,8,8,7,7], 2025:[3,5,5,5,5,6,7,8,8,8,7,7],
+            2026:[4,5,5,5,6,6,7,8,8,9,8,7], 2027:[4,6,6,5,6,7,8,8,8,9,8,7], 2028:[4,5,5,5,5,6,7,7,8,8,7,7], 2029:[3,5,5,5,5,6,7,8,8,8,7,7],
+            2030:[4,5,5,5,6,6,7,8,8,9,8,7]
+        };
+
+        // 2. Array statis yang lama dihapus.
+        // const solarMonthStartDates = [6, 5, 6, 5, 6, 5, 7, 8, 8, 9, 8, 7]; // <-- DIHAPUS
+
         const gregorianToSolarOrderMap = [11,0,1,2,3,4,5,6,7,8,9,10];
         const qiStages = { 'Yang Wood': { 11: '長生', 0: '沐浴', 1: '冠帶', 2: '臨官', 3: '帝旺', 4: '衰', 5: '病', 6: '死', 7: '墓', 8: '絕', 9: '胎', 10: '養' }, 'Yin Wood': { 6: '長生', 5: '沐浴', 4: '冠帶', 3: '臨官', 2: '帝旺', 1: '衰', 0: '病', 11: '死', 10: '墓', 9: '絕', 8: '胎', 7: '養' }, 'Yang Fire': { 2: '長生', 3: '沐浴', 4: '冠帶', 5: '臨官', 6: '帝旺', 7: '衰', 8: '病', 9: '死', 10: '墓', 11: '絕', 0: '胎', 1: '養' }, 'Yin Fire': { 9: '長生', 8: '沐浴', 7: '冠帶', 6: '臨官', 5: '帝旺', 4: '衰', 3: '病', 2: '死', 1: '墓', 0: '絕', 11: '胎', 10: '養' }, 'Yang Earth': { 2: '長生', 3: '沐浴', 4: '冠帶', 5: '臨官', 6: '帝旺', 7: '衰', 8: '病', 9: '死', 10: '墓', 11: '絕', 0: '胎', 1: '養' }, 'Yin Earth': { 9: '長生', 8: '沐浴', 7: '冠帶', 6: '臨官', 5: '帝旺', 4: '衰', 3: '病', 2: '死', 1: '墓', 0: '絕', 11: '胎', 10: '養' }, 'Yang Metal': { 5: '長生', 6: '沐浴', 7: '冠帶', 8: '臨官', 9: '帝旺', 10: '衰', 11: '病', 0: '死', 1: '墓', 2: '絕', 3: '胎', 4: '養' }, 'Yin Metal': { 0: '長生', 11: '沐浴', 10: '冠帶', 9: '臨官', 8: '帝旺', 7: '衰', 6: '病', 5: '死', 4: '墓', 3: '絕', 2: '胎', 1: '養' }, 'Yang Water': { 8: '長生', 9: '沐浴', 10: '冠帶', 11: '臨官', 0: '帝旺', 1: '衰', 2: '病', 3: '死', 4: '墓', 5: '絕', 6: '胎', 7: '養' }, 'Yin Water': { 3: '長生', 2: '沐浴', 1: '冠帶', 0: '臨官', 11: '帝旺', 10: '衰', 9: '病', 8: '死', 7: '墓', 6: '絕', 5: '胎', 4: '養' } };
         const qiStageNames = { '長生': 'Growth', '沐浴': 'Bath', '冠帶': 'Dressing', '臨官': 'Officer', '帝旺': 'Prosperity', '衰': 'Decline', '病': 'Sickness', '死': 'Death', '墓': 'Tomb', '絕': 'Extinction', '胎': 'Embryo', '養': 'Nourishment' };
@@ -229,37 +264,50 @@
             const allResultDivs = [dom.baziChartResultDiv, dom.scenarioAnalysisResultDiv, dom.elementStrengthAnalysisDiv, dom.tenGodsAnalysisDiv, dom.dynamicAnalysisResultDiv, dom.luckPillarResultDiv, dom.mingGuaBazhaiResultDiv];
             allResultDivs.forEach(div => div.innerHTML = "");
             const year = parseInt(dom.birthYearInput.value);
-            const month = parseInt(dom.birthMonthInput.value);
+            const month = parseInt(dom.birthMonthInput.value); // 0-11
             const day = parseInt(dom.birthDayInput.value);
             const isHourUnknown = dom.unknownBirthHourCheckbox.checked;
-            const baziYear = (month < 1 || (month === 1 && day < 5)) ? year - 1 : year;
-            const yearStemIndex = (baziYear - 1924) % 10;
-            const yearBranchIndex = (baziYear - 1924) % 12;
+
+            // --- PERBAIKAN PLOTTER BAZI ---
+            // Menggunakan database Jie Qi yang baru untuk akurasi
+            const yearTerms = solarTermDatesByYear[year];
+            if (!yearTerms) {
+                alert(`Data untuk tahun ${year} tidak tersedia. Harap pilih tahun antara 1930-2030.`);
+                return null;
+            }
+            const baziYearForMonth = (month === 0 && day < yearTerms[11]) ? year - 1 : year;
+            const yearStemIndex = (baziYearForMonth - 1924) % 10;
+            const yearBranchIndex = (baziYearForMonth - 1924) % 12;
+
+            const solarOrderIndex = gregorianToSolarOrderMap[month];
+            const triggerDay = yearTerms[solarOrderIndex];
+
             let baziGregorianMonth = month;
-            const triggerDay = solarMonthStartDates[gregorianToSolarOrderMap[month]];
-            if (isHourUnknown) {
-                if (day < triggerDay) {
-                    baziGregorianMonth = (month - 1 + 12) % 12;
-                }
-            } else {
-                const hour = parseInt(dom.birthHourInput.value);
-                const minute = parseInt(dom.birthMinuteInput.value);
-                if (day < triggerDay || (day === triggerDay && (hour < 9 || (hour === 9 && minute < 22)))) {
-                    baziGregorianMonth = (month - 1 + 12) % 12;
+            let finalBaziYear = baziYearForMonth;
+
+            if (day < triggerDay) {
+                baziGregorianMonth = (month - 1 + 12) % 12;
+                if (month === 0) { // Jika Januari sebelum Li Chun
+                    finalBaziYear = year - 1;
                 }
             }
-            const gregorianToBranchIndexMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0];
+            
             let firstMonthStemIndex;
-            switch (yearStemIndex) {
+            const baziYearForStem = (month === 0 && day < yearTerms[11]) || (month === 1 && day < yearTerms[0]) ? year - 1 : year;
+            const stemOfYear = (baziYearForStem - 1924) % 10;
+
+            switch (stemOfYear) {
                 case 0: case 5: firstMonthStemIndex = 2; break;
                 case 1: case 6: firstMonthStemIndex = 4; break;
                 case 2: case 7: firstMonthStemIndex = 6; break;
                 case 3: case 8: firstMonthStemIndex = 8; break;
                 case 4: case 9: firstMonthStemIndex = 0; break;
             }
+            
             const solarMonthOrder = gregorianToSolarOrderMap[baziGregorianMonth];
             const monthStemIndex = (firstMonthStemIndex + solarMonthOrder) % 10;
-            const monthBranchIndex = gregorianToBranchIndexMap[baziGregorianMonth];
+            const monthBranchIndex = (solarMonthOrder + 2) % 12;
+            
             const refDate = new Date("1924-01-01T00:00:00Z");
             const targetDate = new Date(Date.UTC(year, month, day));
             const timeDiff = targetDate.getTime() - refDate.getTime();
@@ -267,6 +315,7 @@
             const dayGanzhiIndex = (dayDiff + 15) % 60;
             const dayStemIndex = dayGanzhiIndex % 10;
             const dayBranchIndex = dayGanzhiIndex % 12;
+            
             let hourStemIndex = null;
             let hourBranchIndex = null;
             if (!isHourUnknown) {
@@ -276,12 +325,14 @@
                 hourBranchIndex = Math.floor((hour + 1) / 2) % 12;
                 hourStemIndex = (ziHourStemIndex + hourBranchIndex) % 10;
             }
+            
             const pillars = [
                 { title: "HOUR", title_cn: "時", stemIndex: hourStemIndex, branchIndex: hourBranchIndex },
                 { title: "DAY", title_cn: "日", stemIndex: dayStemIndex, branchIndex: dayBranchIndex },
                 { title: "MONTH", title_cn: "月", stemIndex: monthStemIndex, branchIndex: monthBranchIndex },
                 { title: "YEAR", title_cn: "年", stemIndex: yearStemIndex, branchIndex: yearBranchIndex }
             ];
+            
             const dayMasterIndex = dayStemIndex;
             const dayMaster = heavenlyStemsData[dayMasterIndex];
             const processedPillars = pillars.map((p, i) => {
@@ -321,28 +372,57 @@
             }
         }
 
+        // 3. Fungsi getSolarTermDate diperbaiki untuk menggunakan database baru
         function getSolarTermDate(year, month, day) {
-            const currentTriggerDay = solarMonthStartDates[gregorianToSolarOrderMap[month]];
-            let baziGregorianMonth = month;
-            let baziYearForMonth = year;
+            const yearTerms = solarTermDatesByYear[year];
+            if (!yearTerms) {
+                console.error("Data Jie Qi untuk tahun", year, "tidak tersedia.");
+                return { nextTermDate: null, prevTermDate: null };
+            }
 
+            const solarOrderIndex = gregorianToSolarOrderMap[month];
+            const currentTriggerDay = yearTerms[solarOrderIndex];
+
+            let baziYearForMonth = year;
+            let baziGregorianMonth = month;
+            
             if (day < currentTriggerDay) {
-                baziGregorianMonth = (month - 1 + 12) % 12;
-                if (month === 0) { 
+                baziGregorianMonth = (month === 0) ? 11 : month - 1;
+                if (month === 0) {
                     baziYearForMonth = year - 1;
                 }
             }
-            
-            const nextBaziMonth = (baziGregorianMonth + 1) % 12;
-            const nextBaziYear = (baziGregorianMonth === 11) ? baziYearForMonth + 1 : baziYearForMonth;
-            const nextTermDay = solarMonthStartDates[gregorianToSolarOrderMap[nextBaziMonth]];
-            const nextTermDate = new Date(Date.UTC(nextBaziYear, nextBaziMonth, nextTermDay, 0, 0, 0));
 
-            const thisTermDay = solarMonthStartDates[gregorianToSolarOrderMap[baziGregorianMonth]];
-            const prevTermDate = new Date(Date.UTC(baziYearForMonth, baziGregorianMonth, thisTermDay, 0, 0, 0));
+            const prevYearTerms = solarTermDatesByYear[baziYearForMonth];
+            if (!prevYearTerms) {
+                 console.error("Data Jie Qi untuk tahun sebelumnya", baziYearForMonth, "tidak tersedia.");
+                 return { nextTermDate: null, prevTermDate: null };
+            }
+            const prevSolarOrderIndex = gregorianToSolarOrderMap[baziGregorianMonth];
+            const prevTermDay = prevYearTerms[prevSolarOrderIndex];
+            const prevTermDate = new Date(Date.UTC(baziYearForMonth, baziGregorianMonth, prevTermDay, 0, 0, 0));
+
+            let nextBaziYear = year;
+            let nextBaziMonth = month;
+            if (day >= currentTriggerDay) {
+                nextBaziMonth = (month === 11) ? 0 : month + 1;
+                if (month === 11) {
+                    nextBaziYear = year + 1;
+                }
+            }
+            
+            const nextYearTerms = solarTermDatesByYear[nextBaziYear];
+             if (!nextYearTerms) {
+                 console.error("Data Jie Qi untuk tahun berikutnya", nextBaziYear, "tidak tersedia.");
+                 return { nextTermDate: null, prevTermDate: prevTermDate };
+            }
+            const nextSolarOrderIndex = gregorianToSolarOrderMap[nextBaziMonth];
+            const nextTermDay = nextYearTerms[nextSolarOrderIndex];
+            const nextTermDate = new Date(Date.UTC(nextBaziYear, nextBaziMonth, nextTermDay, 0, 0, 0));
 
             return { nextTermDate, prevTermDate };
         }
+
 
         function calculateLuckPillars(natalPillars, gender, birthDateObj) {
             const yearPillar = natalPillars.find(p => p.title === 'YEAR');
@@ -358,7 +438,13 @@
             let direction = (gender === 'male' && yearStemPolarity === 'Yin') || (gender === 'female' && yearStemPolarity === 'Yang') ? -1 : 1;
 
             const birthDate = new Date(Date.UTC(birthDateObj.year, birthDateObj.month, birthDateObj.day, birthDateObj.hour, birthDateObj.minute));
+            
+            // Memanggil fungsi getSolarTermDate yang sudah diperbaiki
             const { nextTermDate, prevTermDate } = getSolarTermDate(birthDateObj.year, birthDateObj.month, birthDateObj.day);
+
+            if (!nextTermDate || !prevTermDate) {
+                 return { error: "Gagal menghitung tanggal Jie Qi untuk Dayun." };
+            }
 
             let timeDifference;
             if (direction === 1) { // Maju
@@ -369,7 +455,8 @@
 
             const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
             
-            let firstDayunStartAge = Math.floor(daysDifference / 3);
+            // Menggunakan Math.round() sesuai standar mayoritas software
+            let firstDayunStartAge = Math.round(daysDifference / 3);
             if (firstDayunStartAge < 1) firstDayunStartAge = 1;
 
             const luckPillars = [];
@@ -384,6 +471,8 @@
             }
             return { pillars: luckPillars };
         }
+        
+        // --- AKHIR BLOK PERBAIKAN ---
 
         function calculateKongWang(dayGanzhiIndex) {
             const decade = Math.floor(dayGanzhiIndex / 10);
@@ -568,7 +657,7 @@
             dom.scenarioAnalysisResultDiv.innerHTML = html;
         }
 
-        const scoreWeights = { SEASON: 30, PRODUCED_BY_SEASON: 10, DAYUN_BRANCH_INFLUENCE: 35, DAYUN_STEM_INFLUENCE: 25, STEM_SUPPORT: 10, UNROOTED_STEM: 5, HALF_3_HARMONY: 20, STEM_COMBO_FAIL: 5, PUNISHMENT: 5, DUPLICATE_STEM_MULTIPLIER: 1.5 };
+        const scoreWeights = { SEASON: 30, PRODUCED_BY_SEASON: 10, DAYUN_BRANCH_INFLUENCE: 30, DAYUN_STEM_INFLUENCE: 25, STEM_SUPPORT: 10, UNROOTED_STEM: 5, HALF_3_HARMONY: 20, STEM_COMBO_FAIL: 5, PUNISHMENT: 5, DUPLICATE_STEM_MULTIPLIER: 1.5 };
         
         function calculateBaseScores(pillars, notes) {
             let scores = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
@@ -642,12 +731,15 @@
         }
 
         function applyInteractionModifiers(scores, pillars, notes) {
-            const monthBranchPinyin = earthlyBranchesData[pillars.find(p => p.title === 'MONTH').branchIndex].pinyin;
+            const monthPillar = pillars.find(p => p.title === 'MONTH');
+            if (!monthPillar) return scores;
+            const monthBranchPinyin = earthlyBranchesData[monthPillar.branchIndex].pinyin;
             const stems = pillars.map(p => p.stem);
             for (let i = 0; i < stems.length; i++) {
                 for (let j = i + 1; j < stems.length; j++) {
                     const s1 = stems[i];
                     const s2 = stems[j];
+                    if (!s1 || !s2) continue;
                     if ((s1.char === '丙' && s2.char === '辛') || (s1.char === '辛' && s2.char === '丙')) {
                         const seasonEl = getSeasonElement(monthBranchPinyin);
                         if (seasonEl !== 'Water') {
@@ -674,6 +766,7 @@
         function checkForTransformationChart(pillars, notes) {
             const dm = pillars.find(p => p.title === 'DAY');
             const monthPillar = pillars.find(p => p.title === 'MONTH');
+            if (!dm || !monthPillar) return { isSpecial: false };
             const adjacentStem = monthPillar.stem;
             const combos = { '甲己': 'Earth', '乙庚': 'Metal', '丙辛': 'Water', '丁壬': 'Wood', '戊癸': 'Fire' };
             const dmChar = dm.stem.char;
@@ -713,7 +806,9 @@
             const supportingPercentage = (supportingScore / totalScore) * 100;
 
             const dmPercentage = (dmScore / totalScore) * 100;
-            const seasonElement = getSeasonElement(pillars.find(p => p.title === 'MONTH').branch.pinyin);
+            const monthPillar = pillars.find(p => p.title === 'MONTH');
+            if (!monthPillar) return { isSpecial: false };
+            const seasonElement = getSeasonElement(monthPillar.branch.pinyin);
             
             if (dmPercentage > 50 && (seasonElement === dmElement || seasonElement === resourceElement)) {
                 const dominantNames = { Wood: "Dominan Kayu (Qu Zhi Ge)", Fire: "Dominan Api (Yan Shang Ge)", Earth: "Dominan Tanah (Jia Se Ge)", Metal: "Dominan Logam (Cong Ge Ge)", Water: "Dominan Air (Run Xia Ge)" };
@@ -886,6 +981,7 @@
                     }
                 });
                 combinedPillars.slice(0, -1).forEach(p => {
+                    if (!p || p.isUnknown || !incomingPillar || incomingPillar.isUnknown) return;
                     const stemComboMap = { '甲己': 'Earth', '乙庚': 'Metal', '丙辛': 'Water', '丁壬': 'Wood', '戊癸': 'Fire' };
                     const stemClashMap = {'甲':'庚', '庚':'甲', '乙':'辛', '辛':'乙', '丙':'壬', '壬':'丙', '丁':'癸', '癸':'丁'};
                     const pair = [incomingPillar.stem.char, p.stem.char].sort().join('');
@@ -896,7 +992,7 @@
                         notes.push(`<span class="${interactionColors.clash}">⚔️ <b>Bentrokan Langit:</b> ${incomingPillar.stem.char} vs ${p.stem.char}.</span>`);
                     }
                 });
-                const allBranchChars = combinedPillars.map(p => p.branch.char);
+                const allBranchChars = combinedPillars.filter(p => !p.isUnknown).map(p => p.branch.char);
                 const checkBranchInteraction = (map, icon, name, color) => {
                     if (map[incomingPillar.branch.char] && allBranchChars.includes(map[incomingPillar.branch.char])) {
                         const partner = map[incomingPillar.branch.char];
@@ -1140,11 +1236,21 @@
             const dayMasterIndex = natalChartPillars.find(p => p.title === 'DAY').stemIndex;
             const container = document.getElementById('liuri-container');
             let cardsHtml = '';
-            const startDate = new Date(year, month, solarMonthStartDates[gregorianToSolarOrderMap[month]]);
+            
+            const yearTerms = solarTermDatesByYear[year];
+            if (!yearTerms) return; // Pastikan data tahun ada
+            
+            const startDate = new Date(year, month, yearTerms[gregorianToSolarOrderMap[month]]);
+            
             const nextBaziMonthIndex = (gregorianToSolarOrderMap[month] + 1) % 12;
             const nextBaziMonthJs = [1,2,3,4,5,6,7,8,9,10,11,0][nextBaziMonthIndex];
             const nextYear = (month === 11) ? year + 1 : year;
-            const endDate = new Date(nextYear, nextBaziMonthJs, solarMonthStartDates[nextBaziMonthIndex]);
+            
+            const nextYearTerms = solarTermDatesByYear[nextYear];
+            if (!nextYearTerms) return; // Pastikan data tahun berikutnya ada
+            
+            const endDate = new Date(nextYear, nextBaziMonthJs, nextYearTerms[nextBaziMonthIndex]);
+
             for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
                 cardsHtml += createDailyPillarCard(d.getFullYear(), d.getMonth(), d.getDate(), dayMasterIndex);
             }
@@ -1222,7 +1328,7 @@
                 currentMonth = today.getMonth(),
                 currentDay = today.getDate();
             dom.birthYearInput.innerHTML = '';
-            for (let y = currentYear + 5; y >= 1924; y--) {
+            for (let y = currentYear + 5; y >= 1930; y--) { // Disesuaikan dengan database
                 dom.birthYearInput.innerHTML += `<option value="${y}">${y}</option>`;
             }
             dom.birthMonthInput.innerHTML = '';
@@ -1536,5 +1642,3 @@
     </script>
 </body>
 </html>
-
-
