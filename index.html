@@ -191,9 +191,6 @@
         const tenGods = { F: { name: 'Friend', cn: '比肩', abbr: 'F' }, RW: { name: 'Rob Wealth', cn: '劫財', abbr: 'RW' }, EG: { name: 'Eating God', cn: '食神', abbr: 'EG' }, HO: { name: 'Hurting Officer', cn: '傷官', abbr: 'HO' }, DW: { name: 'Direct Wealth', cn: '正財', abbr: 'DW' }, IW: { name: 'Indirect Wealth', cn: '偏財', abbr: 'IW' }, DO: { name: 'Direct Officer', cn: '正官', abbr: 'DO' }, '7K': { name: '7 Killings', cn: '七殺', abbr: '7K' }, DR: { name: 'Direct Resource', cn: '正印', abbr: 'DR' }, IR: { name: 'Indirect Resource', cn: '偏印', abbr: 'IR' } };
         const elementCycle = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
         
-        // --- PERBAIKAN DIMULAI DI SINI ---
-
-        // 1. Database Jie Qi yang Akurat (1930-2030) ditambahkan.
         const solarTermDatesByYear = {
             1930:[4,5,6,5,6,6,7,8,8,9,8,7], 1931:[4,5,6,5,6,6,8,8,8,9,8,7], 1932:[4,5,5,5,5,6,7,7,8,8,7,7], 1933:[4,5,5,5,5,6,7,8,8,8,7,7],
             1934:[4,5,6,5,6,6,7,8,8,9,8,7], 1935:[4,5,6,5,6,7,8,8,8,9,8,7], 1936:[4,5,5,5,6,6,7,7,8,8,7,7], 1937:[4,5,5,5,5,6,7,8,8,8,7,7],
@@ -222,9 +219,6 @@
             2026:[4,5,5,5,6,6,7,8,8,9,8,7], 2027:[4,6,6,5,6,7,8,8,8,9,8,7], 2028:[4,5,5,5,5,6,7,7,8,8,7,7], 2029:[3,5,5,5,5,6,7,8,8,8,7,7],
             2030:[4,5,5,5,6,6,7,8,8,9,8,7]
         };
-
-        // 2. Array statis yang lama dihapus.
-        // const solarMonthStartDates = [6, 5, 6, 5, 6, 5, 7, 8, 8, 9, 8, 7]; // <-- DIHAPUS
 
         const gregorianToSolarOrderMap = [11,0,1,2,3,4,5,6,7,8,9,10];
         const qiStages = { 'Yang Wood': { 11: '長生', 0: '沐浴', 1: '冠帶', 2: '臨官', 3: '帝旺', 4: '衰', 5: '病', 6: '死', 7: '墓', 8: '絕', 9: '胎', 10: '養' }, 'Yin Wood': { 6: '長生', 5: '沐浴', 4: '冠帶', 3: '臨官', 2: '帝旺', 1: '衰', 0: '病', 11: '死', 10: '墓', 9: '絕', 8: '胎', 7: '養' }, 'Yang Fire': { 2: '長生', 3: '沐浴', 4: '冠帶', 5: '臨官', 6: '帝旺', 7: '衰', 8: '病', 9: '死', 10: '墓', 11: '絕', 0: '胎', 1: '養' }, 'Yin Fire': { 9: '長生', 8: '沐浴', 7: '冠帶', 6: '臨官', 5: '帝旺', 4: '衰', 3: '病', 2: '死', 1: '墓', 0: '絕', 11: '胎', 10: '養' }, 'Yang Earth': { 2: '長生', 3: '沐浴', 4: '冠帶', 5: '臨官', 6: '帝旺', 7: '衰', 8: '病', 9: '死', 10: '墓', 11: '絕', 0: '胎', 1: '養' }, 'Yin Earth': { 9: '長生', 8: '沐浴', 7: '冠帶', 6: '臨官', 5: '帝旺', 4: '衰', 3: '病', 2: '死', 1: '墓', 0: '絕', 11: '胎', 10: '養' }, 'Yang Metal': { 5: '長生', 6: '沐浴', 7: '冠帶', 8: '臨官', 9: '帝旺', 10: '衰', 11: '病', 0: '死', 1: '墓', 2: '絕', 3: '胎', 4: '養' }, 'Yin Metal': { 0: '長生', 11: '沐浴', 10: '冠帶', 9: '臨官', 8: '帝旺', 7: '衰', 6: '病', 5: '死', 4: '墓', 3: '絕', 2: '胎', 1: '養' }, 'Yang Water': { 8: '長生', 9: '沐浴', 10: '冠帶', 11: '臨官', 0: '帝旺', 1: '衰', 2: '病', 3: '死', 4: '墓', 5: '絕', 6: '胎', 7: '養' }, 'Yin Water': { 3: '長生', 2: '沐浴', 1: '冠帶', 0: '臨官', 11: '帝旺', 10: '衰', 9: '病', 8: '死', 7: '墓', 6: '絕', 5: '胎', 4: '養' } };
@@ -268,8 +262,6 @@
             const day = parseInt(dom.birthDayInput.value);
             const isHourUnknown = dom.unknownBirthHourCheckbox.checked;
 
-            // --- PERBAIKAN PLOTTER BAZI ---
-            // Menggunakan database Jie Qi yang baru untuk akurasi
             const yearTerms = solarTermDatesByYear[year];
             if (!yearTerms) {
                 alert(`Data untuk tahun ${year} tidak tersedia. Harap pilih tahun antara 1930-2030.`);
@@ -372,7 +364,6 @@
             }
         }
 
-        // 3. Fungsi getSolarTermDate diperbaiki untuk menggunakan database baru
         function getSolarTermDate(year, month, day) {
             const yearTerms = solarTermDatesByYear[year];
             if (!yearTerms) {
@@ -439,7 +430,6 @@
 
             const birthDate = new Date(Date.UTC(birthDateObj.year, birthDateObj.month, birthDateObj.day, birthDateObj.hour, birthDateObj.minute));
             
-            // Memanggil fungsi getSolarTermDate yang sudah diperbaiki
             const { nextTermDate, prevTermDate } = getSolarTermDate(birthDateObj.year, birthDateObj.month, birthDateObj.day);
 
             if (!nextTermDate || !prevTermDate) {
@@ -455,7 +445,6 @@
 
             const daysDifference = timeDifference / (1000 * 60 * 60 * 24);
             
-            // Menggunakan Math.round() sesuai standar mayoritas software
             let firstDayunStartAge = Math.round(daysDifference / 3);
             if (firstDayunStartAge < 1) firstDayunStartAge = 1;
 
@@ -472,8 +461,6 @@
             return { pillars: luckPillars };
         }
         
-        // --- AKHIR BLOK PERBAIKAN ---
-
         function calculateKongWang(dayGanzhiIndex) {
             const decade = Math.floor(dayGanzhiIndex / 10);
             const voidMap = [['戌', '亥'], ['申', '酉'], ['午', '未'], ['辰', '巳'], ['寅', '卯'], ['子', '丑']];
@@ -657,7 +644,22 @@
             dom.scenarioAnalysisResultDiv.innerHTML = html;
         }
 
-        const scoreWeights = { SEASON: 30, PRODUCED_BY_SEASON: 10, DAYUN_BRANCH_INFLUENCE: 30, DAYUN_STEM_INFLUENCE: 25, STEM_SUPPORT: 10, UNROOTED_STEM: 5, HALF_3_HARMONY: 20, STEM_COMBO_FAIL: 5, PUNISHMENT: 5, DUPLICATE_STEM_MULTIPLIER: 1.5 };
+        // --- PERUBAHAN DIMULAI DI SINI ---
+        // Menambahkan bobot spesifik untuk Liu Nian (Pilar Tahunan)
+        const scoreWeights = { 
+            SEASON: 30, 
+            PRODUCED_BY_SEASON: 10, 
+            DAYUN_BRANCH_INFLUENCE: 30, 
+            DAYUN_STEM_INFLUENCE: 25, 
+            ANNUAL_BRANCH_INFLUENCE: 25, // Bobot baru untuk Cabang Bumi Tahunan
+            ANNUAL_STEM_INFLUENCE: 20,   // Bobot baru untuk Batang Langit Tahunan
+            STEM_SUPPORT: 10, 
+            UNROOTED_STEM: 5, 
+            HALF_3_HARMONY: 20, 
+            STEM_COMBO_FAIL: 5, 
+            PUNISHMENT: 5, 
+            DUPLICATE_STEM_MULTIPLIER: 1.5 
+        };
         
         function calculateBaseScores(pillars, notes) {
             let scores = { Wood: 0, Fire: 0, Earth: 0, Metal: 0, Water: 0 };
@@ -684,6 +686,20 @@
                 scores[dayunStemElement] += scoreWeights.DAYUN_STEM_INFLUENCE;
                 if(notes) notes.push(`Pengaruh Batang Dayun ${dayunPillar.stem.char} (${dayunStemElement}) kuat, memberi bonus +${scoreWeights.DAYUN_STEM_INFLUENCE} poin.`);
             }
+            
+            // Logika baru untuk menambahkan bobot Liu Nian
+            const annualPillar = pillars.find(p => p.title === 'ANNUAL');
+            if (annualPillar) {
+                const annualBranchElement = annualPillar.branch.element;
+                scores[annualBranchElement] += scoreWeights.ANNUAL_BRANCH_INFLUENCE;
+                if(notes) notes.push(`👑 Pengaruh Cabang Liu Nian ${annualPillar.branch.char} (${annualBranchElement}) sangat kuat, memberi bonus +${scoreWeights.ANNUAL_BRANCH_INFLUENCE} poin.`);
+                
+                const annualStemElement = annualPillar.stem.element;
+                scores[annualStemElement] += scoreWeights.ANNUAL_STEM_INFLUENCE;
+                if(notes) notes.push(`👑 Pengaruh Batang Liu Nian ${annualPillar.stem.char} (${annualStemElement}) kuat, memberi bonus +${scoreWeights.ANNUAL_STEM_INFLUENCE} poin.`);
+            }
+            // --- AKHIR BLOK PERUBAHAN ---
+
 
             pillars.forEach(p => {
                 if (p.isUnknown) return;
@@ -692,7 +708,7 @@
                 allHiddenStems.forEach(hsIndex => {
                     const hiddenStem = heavenlyStemsData[hsIndex];
                     let scoreToAdd = (hsIndex === branch.hidden.mainQi) ? 15 : 10;
-                    if (['MONTH', 'DAY', 'ANNUAL', 'MONTHLY'].includes(p.title)) { scoreToAdd += 5; }
+                    if (['MONTH', 'DAY', 'LUCK', 'ANNUAL', 'MONTHLY'].includes(p.title)) { scoreToAdd += 5; } // Bobot kecil tetap ada
                     scores[hiddenStem.element] += scoreToAdd;
                     if(notes) notes.push(`Kekuatan dari ${branch.pinyin} (${hiddenStem.char}) memberi +${scoreToAdd} poin ke ${hiddenStem.element}.`);
                 });
@@ -706,7 +722,7 @@
             });
 
             pillars.forEach(p => {
-                if (p.isUnknown || p.title === 'DAY' || p.title === 'LUCK') return;
+                if (p.isUnknown || p.title === 'DAY' || p.title === 'LUCK' || p.title === 'ANNUAL') return; // Modifikasi: Jangan hitung ulang stem Dayun/Annual
                 const stem = p.stem;
                 let scoreToAdd = hasRoot(stem.stemIndex, pillars) ? scoreWeights.STEM_SUPPORT : scoreWeights.UNROOTED_STEM;
                 
@@ -1139,6 +1155,7 @@
             const container = dom.dynamicAnalysisResultDiv;
             container.innerHTML = '';
             const elementColors = { Wood: 'bg-green-500', Fire: 'bg-red-500', Earth: 'bg-yellow-500', Metal: 'bg-gray-400', Water: 'bg-blue-500' };
+            
             const renderComparisonBar = (name, origScore, newScore, origTotal, newTotal, colorClass) => {
                 const origPercent = origTotal > 0 ? (origScore / origTotal * 100) : 0;
                 const newPercent = newTotal > 0 ? (newScore / newTotal * 100) : 0;
@@ -1146,8 +1163,25 @@
                 let indicator = '';
                 if (change > 0.1) indicator = `<span class="change-indicator up">▲ ${change.toFixed(1)}%</span>`;
                 if (change < -0.1) indicator = `<span class="change-indicator down">▼ ${Math.abs(change).toFixed(1)}%</span>`;
-                return `<div class="mb-3"><div class="flex justify-between items-center mb-1"><span class="font-semibold text-[var(--text-primary)]">${name}</span><div><span class="text-sm font-medium text-[var(--text-secondary)]">${newPercent.toFixed(1)}%</span>${indicator}</div></div><div class="strength-bar-container"><div class="strength-bar ${colorClass}" style="width: ${newPercent}%;"></div></div><div class="text-xs text-[var(--text-muted)] mt-1">Sebelumnya: ${origPercent.toFixed(1)}%</div></div>`;
+
+                const newScoreText = `${Math.round(newScore)} poin (${newPercent.toFixed(1)}%)`;
+                const oldScoreText = `Sebelumnya: ${Math.round(origScore)} poin (${origPercent.toFixed(1)}%)`;
+
+                return `<div class="mb-3">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-semibold text-[var(--text-primary)]">${name}</span>
+                                <div>
+                                    <span class="text-sm font-medium text-[var(--text-secondary)]">${newScoreText}</span>
+                                    ${indicator}
+                                </div>
+                            </div>
+                            <div class="strength-bar-container">
+                                <div class="strength-bar ${colorClass}" style="width: ${newPercent}%;"></div>
+                            </div>
+                            <div class="text-xs text-[var(--text-muted)] mt-1">${oldScoreText}</div>
+                        </div>`;
             };
+
             let elementBarsHtml = elementCycle.map(el => renderComparisonBar(el, originalEl.scores[el], newEl.scores[el], originalEl.totalScore, newEl.totalScore, elementColors[el])).join('');
             let sortedGods = Object.keys(tenGods).sort((a, b) => newGod.scores[b] - newGod.scores[a]);
             let godBarsHtml = sortedGods.map(abbr => renderComparisonBar(`${tenGods[abbr].name} (${abbr})`, originalGod.scores[abbr], newGod.scores[abbr], originalGod.totalScore, newGod.totalScore, 'bg-sky-500')).join('');
